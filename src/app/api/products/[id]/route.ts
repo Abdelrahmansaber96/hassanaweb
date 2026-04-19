@@ -140,15 +140,17 @@ export async function PATCH(
     }
 
     if ("category" in body) {
-      if (!isValidCategory(body.category)) {
+      const category: unknown = body.category;
+
+      if (!isValidCategory(category)) {
         return NextResponse.json(
           { error: "الفئة المختارة غير صالحة" },
           { status: 400 }
         );
       }
 
-      updates.category = body.category;
-      updates.categoryName = CATEGORY_LABELS[body.category];
+      updates.category = category;
+      updates.categoryName = CATEGORY_LABELS[category];
     }
 
     if ("manufacturer" in body) {

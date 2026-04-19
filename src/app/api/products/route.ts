@@ -79,15 +79,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsedPrice = parsePriceInput(body.price);
     const name = String(body.name ?? "").trim();
+    const category: unknown = body.category;
 
-    if (!name || !body.category) {
+    if (!name || !category) {
       return NextResponse.json(
         { error: "الحقول المطلوبة: الاسم، الفئة" },
         { status: 400 }
       );
     }
 
-    if (!isValidCategory(body.category)) {
+    if (!isValidCategory(category)) {
       return NextResponse.json(
         { error: "الفئة المختارة غير صالحة" },
         { status: 400 }
@@ -105,8 +106,8 @@ export async function POST(request: NextRequest) {
       id: body.id || Date.now().toString(),
       name,
       slug: body.slug || buildProductSlug(name),
-      category: body.category,
-      categoryName: CATEGORY_LABELS[body.category],
+      category,
+      categoryName: CATEGORY_LABELS[category],
       price: parsedPrice.price,
       form: parseOptionalText(body.form),
       variants: parseStringArray(body.variants),
