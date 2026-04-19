@@ -2,26 +2,32 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
+import { CATEGORY_OPTIONS } from "@/lib/products";
 import { siteConfig } from "@/lib/site";
 
 const navLinks = [
   { href: "/", label: "الرئيسية" },
   { href: "/products", label: "جميع المنتجات" },
-  { href: "/products?category=antibiotics", label: "مضادات حيوية" },
-  { href: "/products?category=dewormers-mange-parasites", label: "ديدان وطفيليات" },
-  { href: "/products?category=oral-vitamins-minerals", label: "فيتامينات ومعادن" },
-  { href: "/products?category=veterinary-equipment", label: "معدات بيطرية" },
 ];
+
+const categoryLinks = CATEGORY_OPTIONS.map((category) => ({
+  href: `/products?category=${category.value}`,
+  label: category.label,
+  icon: category.icon,
+  value: category.value,
+}));
 
 export default function Navbar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { totalCount, openCart } = useCart();
+  const activeCategory = searchParams.get("category");
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -67,7 +73,11 @@ export default function Navbar() {
           {/* Desktop Links */}
           <div className="hidden lg:flex items-center gap-0.5">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || (link.href !== "/" && pathname?.startsWith(link.href.split("?")[0]));
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/"
+                  : pathname === "/products";
+
               return (
                 <Link
                   key={link.label}
@@ -143,6 +153,31 @@ export default function Navbar() {
           </div>
         </nav>
 
+        <div className="hidden lg:block border-t border-gray-100 bg-white/95 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              {categoryLinks.map((link) => {
+                const isActive = pathname === "/products" && activeCategory === link.value;
+
+                return (
+                  <Link
+                    key={link.value}
+                    href={link.href}
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${
+                      isActive
+                        ? "border-[#1a5c3a] bg-[#1a5c3a]/10 text-[#1a5c3a]"
+                        : "border-gray-200 text-gray-600 hover:border-[#1a5c3a]/30 hover:bg-[#1a5c3a]/5 hover:text-[#1a5c3a]"
+                    }`}
+                  >
+                    <span>{link.icon}</span>
+                    <span>{link.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Mobile Menu */}
         <AnimatePresence>
           {menuOpen && (
@@ -163,6 +198,32 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
+
+              <div className="mt-3 border-t border-gray-100 pt-3">
+                <p className="px-2 pb-2 text-xs font-bold text-gray-400">التصنيفات</p>
+                <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                  {categoryLinks.map((link) => {
+                    const isActive = pathname === "/products" && activeCategory === link.value;
+
+                    return (
+                      <Link
+                        key={link.value}
+                        href={link.href}
+                        onClick={() => setMenuOpen(false)}
+                        className={`flex items-start gap-2 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${
+                          isActive
+                            ? "bg-[#1a5c3a]/10 text-[#1a5c3a]"
+                            : "text-gray-700 hover:bg-[#1a5c3a]/10 hover:text-[#1a5c3a]"
+                        }`}
+                      >
+                        <span className="pt-0.5">{link.icon}</span>
+                        <span className="leading-6">{link.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
               <a
                 href={siteConfig.contact.whatsappHref}
                 target="_blank"
