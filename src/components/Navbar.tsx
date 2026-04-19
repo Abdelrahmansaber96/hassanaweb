@@ -248,7 +248,7 @@ export default function Navbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="lg:hidden border-t border-gray-100 bg-white px-4 pt-2 pb-4 flex flex-col gap-0.5"
+              className="lg:hidden max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-gray-100 bg-white px-4 pt-2 pb-4 flex flex-col gap-0.5"
             >
               {navLinks.map((link) => (
                 <Link
