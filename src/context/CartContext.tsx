@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -97,6 +98,61 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => EMPTY_CART
   );
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function syncCartPrices() {
+      const currentItems = readStoredCartItems();
+
+      if (currentItems.length === 0) {
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/products", { cache: "no-store" });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const latestProducts = (await response.json()) as Product[];
+        const productsById = new Map(
+          latestProducts.map((product) => [product.id, product])
+        );
+
+        let hasPriceChanges = false;
+        const syncedItems = currentItems.map((item) => {
+          const latestProduct = productsById.get(item.product.id);
+
+          if (!latestProduct || latestProduct.price === item.product.price) {
+            return item;
+          }
+
+          hasPriceChanges = true;
+          return {
+            ...item,
+            product: {
+              ...item.product,
+              price: latestProduct.price,
+            },
+          };
+        });
+
+        if (!cancelled && hasPriceChanges) {
+          writeStoredCartItems(syncedItems);
+        }
+      } catch {
+        // Ignore sync failures and keep the current local cart state.
+      }
+    }
+
+    void syncCartPrices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const updateItems = useCallback(
     (updater: (currentItems: CartItem[]) => CartItem[]) => {

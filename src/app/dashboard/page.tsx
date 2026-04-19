@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Product, Category } from "@/lib/products";
-import { CATEGORY_LABELS as LABELS } from "@/lib/products";
+import { CATEGORY_LABELS as LABELS, formatProductPrice } from "@/lib/products";
 
 const CATEGORY_ICONS: Record<string, string> = {
   antibacterials: "💊",
@@ -23,6 +23,7 @@ const emptyForm = {
   category: "antibacterials" as Category,
   description: "",
   manufacturer: "",
+  price: "",
   inStock: true,
 };
 
@@ -39,6 +40,8 @@ export default function DashboardPage() {
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState<Category | "all">("all");
+  const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+  const [savingPriceId, setSavingPriceId] = useState<string | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -60,6 +63,14 @@ export default function DashboardPage() {
       const res = await fetch("/api/products");
       const data: Product[] = await res.json();
       setProducts(data);
+      setPriceDrafts(
+        Object.fromEntries(
+          data.map((product) => [
+            product.id,
+            typeof product.price === "number" ? String(product.price) : "",
+          ])
+        )
+      );
     } catch {
       showToast("خطأ في تحميل المنتجات", "error");
     } finally {
@@ -77,6 +88,7 @@ export default function DashboardPage() {
     try {
       const body = {
         ...form,
+        price: form.price === "" ? null : Number(form.price),
       };
       const res = await fetch("/api/products", {
         method: "POST",
@@ -95,6 +107,46 @@ export default function DashboardPage() {
       showToast(err instanceof Error ? err.message : "حدث خطأ أثناء الإضافة", "error");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handlePriceSave = async (productId: string) => {
+    const rawPrice = priceDrafts[productId] ?? "";
+    const normalizedPrice = rawPrice.trim();
+
+    if (normalizedPrice !== "") {
+      const parsedPrice = Number(normalizedPrice);
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        showToast("السعر يجب أن يكون رقمًا صحيحًا أو فارغًا", "error");
+        return;
+      }
+    }
+
+    setSavingPriceId(productId);
+
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          price: normalizedPrice === "" ? null : Number(normalizedPrice),
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "تعذر تحديث السعر");
+      }
+
+      await fetchProducts();
+      showToast("تم تحديث السعر بنجاح", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "تعذر تحديث السعر",
+        "error"
+      );
+    } finally {
+      setSavingPriceId(null);
     }
   };
 
@@ -281,6 +333,21 @@ export default function DashboardPage() {
                     value={form.description}
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                     className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1a5c3a] transition-colors resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                    السعر بالريال السعودي
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.price}
+                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                    placeholder="مثال: 75"
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1a5c3a] transition-colors"
                   />
                 </div>
 
@@ -471,6 +538,7 @@ export default function DashboardPage() {
                     <th className="text-right px-5 py-3.5">#</th>
                     <th className="text-right px-5 py-3.5">المنتج</th>
                     <th className="text-right px-5 py-3.5">الفئة</th>
+                    <th className="text-right px-5 py-3.5">السعر</th>
                     <th className="text-right px-5 py-3.5">المخزون</th>
                     <th className="text-right px-5 py-3.5">إجراءات</th>
                   </tr>
@@ -511,6 +579,36 @@ export default function DashboardPage() {
                           <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium whitespace-nowrap">
                             {LABELS[product.category] || product.category}
                           </span>
+                        </td>
+
+                        <td className="px-5 py-4 min-w-[220px]">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={priceDrafts[product.id] ?? ""}
+                              onChange={(e) =>
+                                setPriceDrafts((drafts) => ({
+                                  ...drafts,
+                                  [product.id]: e.target.value,
+                                }))
+                              }
+                              placeholder="بدون سعر"
+                              className="w-28 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#1a5c3a]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handlePriceSave(product.id)}
+                              disabled={savingPriceId === product.id}
+                              className="rounded-xl bg-[#1a5c3a] px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-[#13452b] disabled:opacity-60"
+                            >
+                              {savingPriceId === product.id ? "جارٍ الحفظ" : "حفظ"}
+                            </button>
+                          </div>
+                          <p className="mt-2 text-xs font-semibold text-[#1a5c3a]">
+                            {formatProductPrice(product.price)}
+                          </p>
                         </td>
 
                         {/* Stock */}

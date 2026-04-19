@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHelpers";
 import ProductCard from "@/components/ProductCard";
@@ -84,8 +85,17 @@ export default function HomePageClient({
             transition={{ duration: 0.45 }}
             className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-md"
           >
-            <span className="text-2xl leading-none">🐾</span>
-            صيدلية بيطرية موثوقة
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-[0_4px_14px_rgba(4,13,24,0.18)]">
+              <Image
+                src="/hassana.png"
+                alt="شعار حصانة فيت"
+                width={22}
+                height={22}
+                className="h-[22px] w-[22px] object-contain"
+                priority
+              />
+            </span>
+            صيدلية النخلة البيطرية 
           </motion.div>
 
           <motion.h1
@@ -105,7 +115,7 @@ export default function HomePageClient({
             transition={{ duration: 0.5, delay: 0.16 }}
             className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-white/90 sm:text-lg"
           >
-            أدوية ومنتجات بيطرية متخصصة لصحة الحيوان، من مضادات الجراثيم والفيتامينات إلى المنتجات العلفية والمكملات.
+            أدوية ومنتجات بيطرية متخصصة لصحة الحيوان، من المضادات الحيوية والفيتامينات إلى المعدات البيطرية والمكملات.
             اختر بسرعة، واطلب مباشرة، ووصل طلبك بثقة.
           </motion.p>
 
@@ -302,7 +312,7 @@ export default function HomePageClient({
             <div className="absolute top-0 right-0 w-40 h-40 bg-[#d4a017]/10 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-56 h-56 bg-[#2d8a56]/20 rounded-full blur-3xl" />
             <div className="relative">
-              <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">استشارة تفرق ... ناموس يبرق</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold mb-3">استشارة تفرق</h2>
               <p className="text-white/60 mb-8 max-w-xl mx-auto text-sm leading-relaxed">
                 تواصل مع فريقنا البيطري المتخصص عبر واتساب للحصول على توصيات شخصية وطلب سريع. خبرة أكثر من 15 عاماً في رعاية الماشية.
               </p>

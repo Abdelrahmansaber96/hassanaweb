@@ -1,10 +1,9 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
-const isProduction = process.env.NODE_ENV === "production";
-const serverSelectionTimeoutMS = isProduction ? 5000 : 800;
-const connectTimeoutMS = isProduction ? 5000 : 800;
-const socketTimeoutMS = isProduction ? 10000 : 1500;
+const serverSelectionTimeoutMS = 5000;
+const connectTimeoutMS = 5000;
+const socketTimeoutMS = 10000;
 
 declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
@@ -27,7 +26,10 @@ function createClientPromise() {
 export async function getMongoClient() {
   if (process.env.NODE_ENV === "development") {
     if (!global._mongoClientPromise) {
-      global._mongoClientPromise = createClientPromise();
+      global._mongoClientPromise = createClientPromise().catch((error) => {
+        global._mongoClientPromise = undefined;
+        throw error;
+      });
     }
 
     return global._mongoClientPromise;

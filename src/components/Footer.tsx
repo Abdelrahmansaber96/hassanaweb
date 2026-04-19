@@ -10,13 +10,15 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Image
-                src="/logo.svg"
-                alt="حصانة فيت"
-                width={44}
-                height={44}
-                className="h-11 w-auto object-contain brightness-0 invert"
-              />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/95 shadow-sm">
+                <Image
+                  src="/hassana.png"
+                  alt="حصانة فيت"
+                  width={36}
+                  height={36}
+                  className="h-9 w-9 object-contain"
+                />
+              </div>
               <div>
                 <p className="font-bold text-lg gradient-primary-text">حصانة فيت</p>
                 <p className="text-xs text-gray-400">{siteConfig.tagline}</p>
@@ -31,8 +33,8 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wide">المنتجات</h3>
             <ul className="space-y-2.5 text-sm">
-              <li><Link href="/products?category=antibacterials" className="hover:text-[#d4a017] transition-colors">مضادات الجراثيم</Link></li>
-              <li><Link href="/products?category=feed-products" className="hover:text-[#d4a017] transition-colors">منتجات علفية</Link></li>
+              <li><Link href="/products?category=antibacterials" className="hover:text-[#d4a017] transition-colors">مضادات حيوية</Link></li>
+              <li><Link href="/products?category=feed-products" className="hover:text-[#d4a017] transition-colors">معدات بيطرية</Link></li>
               <li><Link href="/products?category=vitamins-minerals-amino-acids" className="hover:text-[#d4a017] transition-colors">فيتامينات ومعادن</Link></li>
               <li><Link href="/products?category=anti-inflammatory-analgesics" className="hover:text-[#d4a017] transition-colors">مضادات الالتهاب</Link></li>
             </ul>

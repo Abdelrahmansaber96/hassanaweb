@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
-import { getCartWhatsAppMessage } from "@/lib/products";
+import {
+  formatProductPrice,
+  getCartLinePrice,
+  getCartPricingSummary,
+  getCartWhatsAppMessage,
+} from "@/lib/products";
 import { useEffect } from "react";
 import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
 
@@ -21,6 +26,9 @@ const categoryIcons: Record<string, string> = {
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQty, clearCart, totalCount } =
     useCart();
+  const pricingSummary = getCartPricingSummary(items);
+  const hasPricedItems = pricingSummary.pricedItems > 0;
+  const hasUnpricedItems = pricingSummary.unpricedItems > 0;
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -131,6 +139,14 @@ export default function CartDrawer() {
                         <p className="text-[#1a5c3a] font-bold text-xs mt-1">
                           الكمية: {item.quantity}
                         </p>
+                        <div className="mt-2 space-y-1 text-xs">
+                          <p className="font-semibold text-[#1a1a2e]">
+                            سعر الوحدة: <span className="text-[#1a5c3a]">{formatProductPrice(item.product.price)}</span>
+                          </p>
+                          <p className="text-gray-500">
+                            إجمالي الصنف: <span className="font-bold text-[#1a1a2e]">{formatProductPrice(getCartLinePrice(item))}</span>
+                          </p>
+                        </div>
 
                         {/* Qty controls */}
                         <div className="flex items-center gap-2 mt-2">
@@ -178,6 +194,21 @@ export default function CartDrawer() {
                     <span>إجمالي المنتجات</span>
                     <span className="gradient-primary-text">{totalCount} قطعة</span>
                   </div>
+                  {hasPricedItems && (
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>{hasUnpricedItems ? "إجمالي المنتجات المسعّرة" : "الإجمالي التقديري"}</span>
+                      <span className="font-bold text-[#1a5c3a]">
+                        {formatProductPrice(pricingSummary.subtotal)}
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-400">
+                    {hasUnpricedItems
+                      ? "بعض المنتجات ما زالت بسعر عند الطلب."
+                      : hasPricedItems
+                        ? "الإجمالي محسوب حسب الكميات الحالية داخل السلة."
+                        : "سيتم تحديد الأسعار عند تأكيد الطلب عبر واتساب."}
+                  </p>
                 </div>
 
                 {/* CTA buttons */}

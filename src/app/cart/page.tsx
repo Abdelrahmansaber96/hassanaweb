@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
-import { getCartWhatsAppMessage } from "@/lib/products";
+import {
+  formatProductPrice,
+  getCartLinePrice,
+  getCartPricingSummary,
+  getCartWhatsAppMessage,
+} from "@/lib/products";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHelpers";
 import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
 
@@ -31,6 +36,9 @@ const placeholderGradients: Record<string, string> = {
 
 export default function CartPage() {
   const { items, removeItem, updateQty, clearCart, totalCount } = useCart();
+  const pricingSummary = getCartPricingSummary(items);
+  const hasPricedItems = pricingSummary.pricedItems > 0;
+  const hasUnpricedItems = pricingSummary.unpricedItems > 0;
 
   return (
     <div className="pb-20 min-h-screen bg-[#f7f9f8]">
@@ -128,6 +136,21 @@ export default function CartPage() {
 
                           <p className="text-xs text-gray-400 mt-0.5">{item.product.manufacturer}</p>
 
+                          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-[#edf2ee] bg-[#f8fbf9] px-3 py-2.5">
+                              <p className="text-[10px] font-bold text-gray-400">سعر الوحدة</p>
+                              <p className="mt-1 text-sm font-extrabold text-[#1a5c3a]">
+                                {formatProductPrice(item.product.price)}
+                              </p>
+                            </div>
+                            <div className="rounded-2xl border border-[#edf2ee] bg-white px-3 py-2.5">
+                              <p className="text-[10px] font-bold text-gray-400">إجمالي الصنف</p>
+                              <p className="mt-1 text-sm font-extrabold text-[#1a1a2e]">
+                                {formatProductPrice(getCartLinePrice(item))}
+                              </p>
+                            </div>
+                          </div>
+
                           <div className="flex items-center justify-between mt-3">
                             {/* Qty controls */}
                             <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-1 border border-gray-100">
@@ -201,9 +224,25 @@ export default function CartPage() {
                       <span>عدد المنتجات</span>
                       <span>{totalCount} قطعة</span>
                     </div>
-                    <div className="flex justify-between text-sm text-gray-500">
+                    {hasPricedItems && (
+                      <div className="flex justify-between text-sm text-gray-500">
+                        <span>
+                          {hasUnpricedItems ? "إجمالي المنتجات المسعّرة" : "الإجمالي التقديري"}
+                        </span>
+                        <span className="font-bold text-[#1a5c3a]">
+                          {formatProductPrice(pricingSummary.subtotal)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-start gap-3 text-sm text-gray-500">
                       <span>التسعير</span>
-                      <span className="text-green-600 font-medium">يُحدد عبر واتساب</span>
+                      <span className="text-left font-medium text-green-600">
+                        {hasUnpricedItems
+                          ? "بعض المنتجات سعرها عند الطلب"
+                          : hasPricedItems
+                            ? "الأسعار المعروضة تقديرية حسب الكميات الحالية"
+                            : "يُحدد عبر واتساب"}
+                      </span>
                     </div>
                   </div>
 

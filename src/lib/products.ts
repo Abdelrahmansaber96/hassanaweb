@@ -22,6 +22,7 @@ export interface Product {
   slug: string;
   category: Category;
   categoryName: string;
+  price?: number | null;
   form: string | null;
   variants: string[];
   manufacturer: string;
@@ -36,8 +37,8 @@ export interface Product {
 }
 
 export const CATEGORY_LABELS: Record<Category, string> = {
-  antibacterials: "مضادات الجراثيم",
-  "feed-products": "منتجات علفية",
+  antibacterials: "مضادات حيوية",
+  "feed-products": "معدات بيطرية",
   "anti-inflammatory-analgesics": "مضادات الالتهاب والمسكنات",
   "vitamins-minerals-amino-acids": "الفيتامينات والمعادن",
   miscellaneous: "منتجات متنوعة",
@@ -51,6 +52,61 @@ export const WHATSAPP_NUMBER = siteConfig.contact.whatsappNumber;
 export interface CartItem {
   product: Product;
   quantity: number;
+}
+
+const sarCurrencyFormatter = new Intl.NumberFormat("ar-SA", {
+  style: "currency",
+  currency: "SAR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+export function getNumericProductPrice(
+  price: number | null | undefined
+): number | null {
+  if (typeof price !== "number" || !Number.isFinite(price)) {
+    return null;
+  }
+
+  return price;
+}
+
+export function formatProductPrice(price: number | null | undefined): string {
+  const numericPrice = getNumericProductPrice(price);
+
+  if (numericPrice === null) {
+    return "السعر عند الطلب";
+  }
+
+  return sarCurrencyFormatter.format(numericPrice);
+}
+
+export function getCartLinePrice(item: CartItem): number | null {
+  const unitPrice = getNumericProductPrice(item.product.price);
+
+  if (unitPrice === null) {
+    return null;
+  }
+
+  return unitPrice * item.quantity;
+}
+
+export function getCartPricingSummary(items: CartItem[]) {
+  return items.reduce(
+    (summary, item) => {
+      const linePrice = getCartLinePrice(item);
+
+      if (linePrice === null) {
+        summary.unpricedItems += 1;
+        return summary;
+      }
+
+      summary.pricedItems += 1;
+      summary.subtotal += linePrice;
+      return summary;
+    },
+    { subtotal: 0, pricedItems: 0, unpricedItems: 0 }
+  );
 }
 
 export function getProductWhatsAppMessage(product: Product): string {

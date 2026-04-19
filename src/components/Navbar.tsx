@@ -11,8 +11,8 @@ import { siteConfig } from "@/lib/site";
 const navLinks = [
   { href: "/", label: "الرئيسية" },
   { href: "/products", label: "جميع المنتجات" },
-  { href: "/products?category=antibacterials", label: "مضادات الجراثيم" },
-  { href: "/products?category=feed-products", label: "منتجات علفية" },
+  { href: "/products?category=antibacterials", label: "مضادات حيوية" },
+  { href: "/products?category=feed-products", label: "معدات بيطرية" },
   { href: "/products?category=vitamins-minerals-amino-acids", label: "فيتامينات ومعادن" },
 ];
 
@@ -59,7 +59,7 @@ export default function Navbar() {
               <span className="font-extrabold text-[#1a5c3a] text-base tracking-tight">
                 حصانة فيت
               </span>
-              <span className="text-[10px] text-gray-400 font-medium">صيدلية بيطرية</span>
+              <span className="text-[10px] text-gray-400 font-medium">صيدلية النخلة البيطرية</span>
             </div>
           </Link>
 
@@ -85,10 +85,10 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Search icon - hidden on mobile */}
+            {/* Search icon */}
             <Link
               href="/products"
-              className="hidden md:flex w-9 h-9 rounded-lg hover:bg-gray-100 items-center justify-center text-gray-500 hover:text-[#1a5c3a] transition-colors"
+              className="flex w-9 h-9 rounded-lg hover:bg-gray-100 items-center justify-center text-gray-500 hover:text-[#1a5c3a] transition-colors"
               aria-label="بحث"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -7,7 +7,14 @@ import { useState } from "react";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHelpers";
 import ProductCard from "@/components/ProductCard";
 import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
-import { getProductWhatsAppMessage, CATEGORY_LABELS, isRemoteImageUrl, type Product } from "@/lib/products";
+import {
+  getNumericProductPrice,
+  getProductWhatsAppMessage,
+  formatProductPrice,
+  CATEGORY_LABELS,
+  isRemoteImageUrl,
+  type Product,
+} from "@/lib/products";
 import { useCart } from "@/context/CartContext";
 
 const categoryIcons: Record<string, string> = {
@@ -48,6 +55,8 @@ export default function ProductDetailClient({ product, related }: Props) {
   const activeImage = hasImages ? product.images[activeImg] : null;
   const canRenderActiveImage = Boolean(activeImage) && !failedImages.includes(activeImg);
   const activeImageIsRemote = isRemoteImageUrl(activeImage);
+  const unitPrice = getNumericProductPrice(product.price);
+  const currentSelectionTotal = unitPrice === null ? null : unitPrice * qty;
 
   return (
     <div className="pb-20 min-h-screen bg-[#f7f9f8]">
@@ -153,6 +162,32 @@ export default function ProductDetailClient({ product, related }: Props) {
               <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1a1a2e] leading-tight">
                 {product.name}
               </h1>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-3xl border border-[#dbe6df] bg-white px-5 py-4 shadow-sm">
+                  <p className="text-[11px] font-bold tracking-wide text-gray-400">سعر الوحدة</p>
+                  <p className="mt-2 text-2xl font-black text-[#1a5c3a] sm:text-3xl">
+                    {formatProductPrice(product.price)}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {unitPrice === null
+                      ? "يتم تأكيد السعر النهائي عند التواصل أو إتمام الطلب."
+                      : "السعر المعروض لكل عبوة أو وحدة من المنتج."}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-[#dbe6df] bg-[#f4f8f5] px-5 py-4 shadow-sm">
+                  <p className="text-[11px] font-bold tracking-wide text-gray-400">إجمالي الكمية الحالية</p>
+                  <p className="mt-2 text-2xl font-black text-[#1a1a2e] sm:text-3xl">
+                    {formatProductPrice(currentSelectionTotal)}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {unitPrice === null
+                      ? "سيظهر الإجمالي هنا تلقائيًا عند إضافة سعر للمنتج من الداشبورد."
+                      : `محسوب على كمية ${qty} ${qty === 1 ? "قطعة" : "قطع"}.`}
+                  </p>
+                </div>
+              </div>
 
               {product.description && (
                 <p className="text-gray-600 leading-relaxed">{product.description}</p>
