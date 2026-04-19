@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hassana Web
 
-## Getting Started
+واجهة ومتجر بيطري مبني على Next.js App Router مع MongoDB ولوحة تحكم محمية ومسارات API للنشر على Vercel.
 
-First, run the development server:
+## التشغيل المحلي
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## النشر على Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+المشروع ينفع يشتغل على Vercel مع مسارات السيرفر والـ API routes، مع هذه الملاحظات:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. القراءة والكتابة على قاعدة البيانات تعتمد على MongoDB Atlas أو أي MongoDB متاح خارجيًا.
+2. رفع الصور على Vercel يحتاج `Vercel Blob` لأن نظام الملفات المحلي في Functions غير دائم.
+3. حماية لوحة التحكم تعمل الآن عبر `proxy.ts` المتوافق مع Next.js 16.
 
-## Learn More
+### Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+أضف هذه المتغيرات داخل Project Settings في Vercel:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+DASHBOARD_PASSWORD=...
+DASHBOARD_SECRET=...
+MONGODB_URI=...
+NEXT_PUBLIC_SITE_URL=https://your-domain.vercel.app
+NEXT_PUBLIC_WHATSAPP_CONTACTS=الرقم الأول:966502343985,الرقم الثاني:966505298914
+BLOB_READ_WRITE_TOKEN=...
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### خطوات النشر
 
-## Deploy on Vercel
+1. ارفع المشروع إلى GitHub.
+2. اعمل Import للمستودع داخل Vercel.
+3. أضف Environment Variables.
+4. إذا كنت تحتاج رفع صور من لوحة التحكم، فعّل Vercel Blob وخذ `BLOB_READ_WRITE_TOKEN`.
+5. نفّذ أول Seed بعد النشر إذا كانت قاعدة البيانات فارغة.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### ملاحظات مهمة
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. لو لم تضف `BLOB_READ_WRITE_TOKEN` على Vercel، رفع الصور من `/api/upload` سيرجع رسالة خطأ واضحة بدل نجاح وهمي.
+2. لو MongoDB بطيئة، القراءة العامة ما زالت تملك fallback للبيانات الثابتة، لكن عمليات الإدارة تحتاج اتصال Mongo صالح.
+3. روابط واتساب المتعددة تعتمد على `NEXT_PUBLIC_WHATSAPP_CONTACTS`.

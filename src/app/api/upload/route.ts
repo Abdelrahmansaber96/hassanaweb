@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { put } from "@vercel/blob";
 import { requireDashboardAccess } from "@/lib/dashboard-auth";
+
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const authResponse = await requireDashboardAccess(req);
@@ -31,6 +34,23 @@ export async function POST(req: Request) {
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `product-${Date.now()}.${ext}`;
+
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const blob = await put(`products/${fileName}`, file, {
+        access: "public",
+        addRandomSuffix: true,
+      });
+
+      return NextResponse.json({ url: blob.url });
+    }
+
+    if (process.env.VERCEL) {
+      return NextResponse.json(
+        { error: "يجب إعداد BLOB_READ_WRITE_TOKEN لرفع الصور على Vercel" },
+        { status: 500 }
+      );
+    }
+
     const dir = join(process.cwd(), "public", "products");
 
     await mkdir(dir, { recursive: true });

@@ -69,7 +69,7 @@ const primaryWhatsAppContact = whatsappContacts[0];
 
 export const siteConfig = {
   name: "حصانة فيت",
-  tagline: "صيدلية بيطرية متخصصة",
+  tagline: "صيدلية النخلة البيطرية ",
   summary:
     "أدوية بيطرية ومكملات ومنتجات علفية موثوقة لرعاية الماشية داخل المملكة.",
   description:
@@ -93,7 +93,7 @@ export const siteConfig = {
     phoneHref: "tel:+966502343985",
     email: "info@hassanavet.com",
     emailHref: "mailto:info@hassanavet.com",
-    address: "الرياض، المملكة العربية السعودية",
+    address: "حائل، المملكة العربية السعودية",
   },
 } as const;
 

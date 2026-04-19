@@ -1,6 +1,10 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
+const isProduction = process.env.NODE_ENV === "production";
+const serverSelectionTimeoutMS = isProduction ? 5000 : 800;
+const connectTimeoutMS = isProduction ? 5000 : 800;
+const socketTimeoutMS = isProduction ? 10000 : 1500;
 
 declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
@@ -12,9 +16,9 @@ function createClientPromise() {
   }
 
   const client = new MongoClient(uri, {
-    serverSelectionTimeoutMS: 800,
-    connectTimeoutMS: 800,
-    socketTimeoutMS: 1500,
+    serverSelectionTimeoutMS,
+    connectTimeoutMS,
+    socketTimeoutMS,
   });
 
   return client.connect();
