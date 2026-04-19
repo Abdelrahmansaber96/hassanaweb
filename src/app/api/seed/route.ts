@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/mongodb";
-import seedData from "@/data/products.json";
-import { CATEGORY_LABELS } from "@/lib/products";
+import { CATEGORY_LABELS, products as seedProducts } from "@/lib/products";
 
 export async function POST(request: NextRequest) {
   // Protect with the dashboard secret to prevent public access
@@ -20,7 +19,7 @@ export async function POST(request: NextRequest) {
     const catCol = db.collection("categories");
     await catCol.deleteMany({});
     const categories = Object.entries(CATEGORY_LABELS).map(([id, name]) => {
-      const count = seedData.filter((p) => p.category === id).length;
+      const count = seedProducts.filter((product) => product.category === id).length;
       return { id, name, productCount: count };
     });
     if (categories.length > 0) {
@@ -30,8 +29,8 @@ export async function POST(request: NextRequest) {
     // Seed products
     const prodCol = db.collection("products");
     await prodCol.deleteMany({});
-    if (seedData.length > 0) {
-      await prodCol.insertMany(seedData.map((p) => ({ ...p })));
+    if (seedProducts.length > 0) {
+      await prodCol.insertMany(seedProducts.map((product) => ({ ...product })));
     }
 
     // Create indexes for fast lookup
@@ -42,8 +41,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       categories: categories.length,
-      products: seedData.length,
-      message: `تم إدراج ${seedData.length} منتج في ${categories.length} تصنيف بنجاح`,
+      products: seedProducts.length,
+      message: `تم إدراج ${seedProducts.length} منتج في ${categories.length} تصنيف بنجاح`,
     });
   } catch (err) {
     return NextResponse.json(

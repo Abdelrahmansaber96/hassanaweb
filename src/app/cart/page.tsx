@@ -4,6 +4,8 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import {
+  CATEGORY_DETAIL_PLACEHOLDER_GRADIENTS,
+  CATEGORY_ICONS,
   formatProductPrice,
   getCartLinePrice,
   getCartPricingSummary,
@@ -11,28 +13,6 @@ import {
 } from "@/lib/products";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHelpers";
 import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
-
-const categoryIcons: Record<string, string> = {
-  antibacterials: "💊",
-  "feed-products": "🌾",
-  "anti-inflammatory-analgesics": "💉",
-  "vitamins-minerals-amino-acids": "🌿",
-  anthelmintics: "🔬",
-  anticoccidials: "🛡️",
-  antiprotozoals: "🧫",
-  miscellaneous: "🧪",
-};
-
-const placeholderGradients: Record<string, string> = {
-  antibacterials: "from-blue-100 to-indigo-200",
-  "feed-products": "from-amber-100 to-yellow-200",
-  "anti-inflammatory-analgesics": "from-rose-100 to-pink-200",
-  "vitamins-minerals-amino-acids": "from-green-100 to-teal-100",
-  anthelmintics: "from-purple-100 to-violet-200",
-  anticoccidials: "from-sky-100 to-cyan-200",
-  antiprotozoals: "from-orange-100 to-amber-200",
-  miscellaneous: "from-gray-100 to-slate-200",
-};
 
 export default function CartPage() {
   const { items, removeItem, updateQty, clearCart, totalCount } = useCart();
@@ -109,9 +89,9 @@ export default function CartPage() {
                         {/* Product visual */}
                         <Link
                           href={`/products/${item.product.id}`}
-                          className={`flex-none w-20 h-20 rounded-2xl bg-gradient-to-br ${placeholderGradients[item.product.category]} flex items-center justify-center text-3xl hover:scale-105 transition-transform`}
+                          className={`flex-none w-20 h-20 rounded-2xl bg-gradient-to-br ${CATEGORY_DETAIL_PLACEHOLDER_GRADIENTS[item.product.category]} flex items-center justify-center text-3xl hover:scale-105 transition-transform`}
                         >
-                          {categoryIcons[item.product.category]}
+                          {CATEGORY_ICONS[item.product.category]}
                         </Link>
 
                         {/* Details */}

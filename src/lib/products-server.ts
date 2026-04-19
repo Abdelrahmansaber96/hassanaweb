@@ -1,5 +1,9 @@
 import { getMongoClient } from "./mongodb";
-import { products as staticProducts, type Product } from "./products";
+import {
+  normalizeProducts,
+  products as staticProducts,
+  type Product,
+} from "./products";
 
 const DB_NAME = "hassanavet";
 const COLLECTION = "products";
@@ -42,9 +46,8 @@ async function ensureStaticProductsSeeded() {
 
 export async function readProducts(): Promise<Product[]> {
   const col = await getCol();
-  return col
-      .find({}, { projection: { _id: 0 } })
-      .toArray() as unknown as Promise<Product[]>;
+  const products = (await col.find({}, { projection: { _id: 0 } }).toArray()) as Array<Record<string, unknown>>;
+  return normalizeProducts(products);
 }
 
 export async function readProductsWithFallback(): Promise<Product[]> {

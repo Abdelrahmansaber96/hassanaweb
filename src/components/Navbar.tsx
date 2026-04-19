@@ -11,9 +11,10 @@ import { siteConfig } from "@/lib/site";
 const navLinks = [
   { href: "/", label: "الرئيسية" },
   { href: "/products", label: "جميع المنتجات" },
-  { href: "/products?category=antibacterials", label: "مضادات حيوية" },
-  { href: "/products?category=feed-products", label: "معدات بيطرية" },
-  { href: "/products?category=vitamins-minerals-amino-acids", label: "فيتامينات ومعادن" },
+  { href: "/products?category=antibiotics", label: "مضادات حيوية" },
+  { href: "/products?category=dewormers-mange-parasites", label: "ديدان وطفيليات" },
+  { href: "/products?category=oral-vitamins-minerals", label: "فيتامينات ومعادن" },
+  { href: "/products?category=veterinary-equipment", label: "معدات بيطرية" },
 ];
 
 export default function Navbar() {

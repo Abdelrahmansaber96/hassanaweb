@@ -8,6 +8,8 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHel
 import ProductCard from "@/components/ProductCard";
 import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
 import {
+  CATEGORY_DETAIL_PLACEHOLDER_GRADIENTS,
+  CATEGORY_ICONS,
   getNumericProductPrice,
   getProductWhatsAppMessage,
   formatProductPrice,
@@ -16,28 +18,6 @@ import {
   type Product,
 } from "@/lib/products";
 import { useCart } from "@/context/CartContext";
-
-const categoryIcons: Record<string, string> = {
-  antibacterials: "💊",
-  "feed-products": "🌾",
-  "anti-inflammatory-analgesics": "💉",
-  "vitamins-minerals-amino-acids": "🌿",
-  anthelmintics: "🔬",
-  anticoccidials: "🛡️",
-  antiprotozoals: "🧫",
-  miscellaneous: "🧪",
-};
-
-const placeholderGradients: Record<string, string> = {
-  antibacterials: "from-blue-100 to-indigo-200",
-  "feed-products": "from-amber-100 to-yellow-200",
-  "anti-inflammatory-analgesics": "from-rose-100 to-pink-200",
-  "vitamins-minerals-amino-acids": "from-green-100 to-teal-100",
-  anthelmintics: "from-purple-100 to-violet-200",
-  anticoccidials: "from-sky-100 to-cyan-200",
-  antiprotozoals: "from-orange-100 to-amber-200",
-  miscellaneous: "from-gray-100 to-slate-200",
-};
 
 interface Props {
   product: Product;
@@ -79,7 +59,7 @@ export default function ProductDetailClient({ product, related }: Props) {
           <FadeIn direction="left">
             <div className="sticky top-28">
               <motion.div
-                className={`relative h-96 sm:h-[480px] rounded-3xl bg-gradient-to-br ${placeholderGradients[product.category] || "from-gray-100 to-slate-200"} overflow-hidden card-shadow flex items-center justify-center mb-4`}
+                className={`relative h-96 sm:h-[480px] rounded-3xl bg-gradient-to-br ${CATEGORY_DETAIL_PLACEHOLDER_GRADIENTS[product.category] || "from-gray-100 to-slate-200"} overflow-hidden card-shadow flex items-center justify-center mb-4`}
                 whileHover={{ scale: 1.01 }}
                 transition={{ duration: 0.3 }}
               >
@@ -101,7 +81,7 @@ export default function ProductDetailClient({ product, related }: Props) {
                 ) : (
                   <div className="relative z-10 flex flex-col items-center gap-3">
                     <div className="w-36 h-36 rounded-3xl bg-white/70 backdrop-blur-md shadow-xl flex items-center justify-center">
-                      <span className="text-7xl">{categoryIcons[product.category] || "📦"}</span>
+                      <span className="text-7xl">{CATEGORY_ICONS[product.category] || "📦"}</span>
                     </div>
                     <span className="text-sm font-semibold text-gray-600 bg-white/80 px-4 py-1.5 rounded-full">
                       {product.manufacturer}
@@ -149,7 +129,7 @@ export default function ProductDetailClient({ product, related }: Props) {
             <div className="flex flex-col gap-6">
               <div className="flex flex-wrap gap-2">
                 <span className="px-3 py-1.5 rounded-full bg-[#1a5c3a]/10 text-[#1a5c3a] text-xs font-semibold">
-                  {categoryIcons[product.category] || "📦"}{" "}
+                  {CATEGORY_ICONS[product.category] || "📦"}{" "}
                   {CATEGORY_LABELS[product.category] || product.categoryName}
                 </span>
                 {product.form && (

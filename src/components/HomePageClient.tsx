@@ -6,30 +6,14 @@ import { motion } from "framer-motion";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHelpers";
 import ProductCard from "@/components/ProductCard";
 import WhatsAppConsultBanner from "@/components/WhatsAppConsultBanner";
-import { CATEGORY_LABELS, type Category, type Product } from "@/lib/products";
+import {
+  CATEGORY_HOME_GRADIENTS,
+  CATEGORY_ICONS,
+  CATEGORY_LABELS,
+  type Category,
+  type Product,
+} from "@/lib/products";
 import { siteConfig } from "@/lib/site";
-
-const categoryIcons: Record<Category, string> = {
-  antibacterials: "💊",
-  "feed-products": "🌾",
-  "anti-inflammatory-analgesics": "💉",
-  "vitamins-minerals-amino-acids": "🌿",
-  anthelmintics: "🔬",
-  anticoccidials: "🛡️",
-  antiprotozoals: "🧫",
-  miscellaneous: "🧪",
-};
-
-const categoryGradients: Record<Category, string> = {
-  antibacterials: "from-[#1a5c3a] to-[#2d8a56]",
-  "feed-products": "from-[#8B6914] to-[#d4a017]",
-  "anti-inflammatory-analgesics": "from-rose-600 to-pink-500",
-  "vitamins-minerals-amino-acids": "from-emerald-600 to-teal-500",
-  anthelmintics: "from-purple-600 to-violet-500",
-  anticoccidials: "from-sky-600 to-cyan-500",
-  antiprotozoals: "from-orange-600 to-amber-500",
-  miscellaneous: "from-[#2c3e50] to-[#4a6741]",
-};
 
 const DEFAULT_HERO_IMAGE = "/hero-vet-scene.svg";
 const CUSTOM_HERO_IMAGE = "/hero.png";
@@ -205,9 +189,9 @@ export default function HomePageClient({
           <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {categoryCounts.map(({ category, count }) => (
               <StaggerItem key={category}>
-                <Link href={`/products?category=${category}`} className={`relative block rounded-2xl overflow-hidden bg-gradient-to-br ${categoryGradients[category] || "from-gray-600 to-gray-400"} group`}>
+                <Link href={`/products?category=${category}`} className={`relative block rounded-2xl overflow-hidden bg-gradient-to-br ${CATEGORY_HOME_GRADIENTS[category] || "from-gray-600 to-gray-400"} group`}>
                   <div className="relative p-8 flex flex-col items-center text-white text-center gap-3">
-                    <span className="text-5xl group-hover:scale-110 transition-transform duration-300">{categoryIcons[category] || "📦"}</span>
+                    <span className="text-5xl group-hover:scale-110 transition-transform duration-300">{CATEGORY_ICONS[category] || "📦"}</span>
                     <h3 className="text-lg font-bold">{CATEGORY_LABELS[category]}</h3>
                     <p className="text-white/70 text-xs leading-relaxed">{count} منتج</p>
                     <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-white/80 group-hover:text-white transition-colors">

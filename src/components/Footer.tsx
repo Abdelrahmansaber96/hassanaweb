@@ -33,10 +33,10 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wide">المنتجات</h3>
             <ul className="space-y-2.5 text-sm">
-              <li><Link href="/products?category=antibacterials" className="hover:text-[#d4a017] transition-colors">مضادات حيوية</Link></li>
-              <li><Link href="/products?category=feed-products" className="hover:text-[#d4a017] transition-colors">معدات بيطرية</Link></li>
-              <li><Link href="/products?category=vitamins-minerals-amino-acids" className="hover:text-[#d4a017] transition-colors">فيتامينات ومعادن</Link></li>
-              <li><Link href="/products?category=anti-inflammatory-analgesics" className="hover:text-[#d4a017] transition-colors">مضادات الالتهاب</Link></li>
+              <li><Link href="/products?category=antibiotics" className="hover:text-[#d4a017] transition-colors">مضادات حيوية</Link></li>
+              <li><Link href="/products?category=poultry-medicines" className="hover:text-[#d4a017] transition-colors">أدوية دواجن</Link></li>
+              <li><Link href="/products?category=oral-vitamins-minerals" className="hover:text-[#d4a017] transition-colors">فيتامينات ومعادن شراب</Link></li>
+              <li><Link href="/products?category=ointments-creams-sprays" className="hover:text-[#d4a017] transition-colors">مراهم وكريمات وبخاخات</Link></li>
             </ul>
           </div>
 
@@ -44,9 +44,9 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wide">أقسام سريعة</h3>
             <ul className="space-y-2.5 text-sm">
-              <li><Link href="/products?category=anthelmintics" className="hover:text-[#d4a017] transition-colors">🔬 طاردات الديدان</Link></li>
-              <li><Link href="/products?category=anticoccidials" className="hover:text-[#d4a017] transition-colors">🛡️ مضادات الأكريات</Link></li>
-              <li><Link href="/products?category=antiprotozoals" className="hover:text-[#d4a017] transition-colors">🧫 مضادات الأوالي</Link></li>
+              <li><Link href="/products?category=dewormers-mange-parasites" className="hover:text-[#d4a017] transition-colors">🔬 أدوية ديدان وجرب وطفيليات</Link></li>
+              <li><Link href="/products?category=pets-birds" className="hover:text-[#d4a017] transition-colors">🐾 أدوية قطط وكلاب وطيور زينة</Link></li>
+              <li><Link href="/products?category=veterinary-equipment" className="hover:text-[#d4a017] transition-colors">🧰 معدات بيطرية</Link></li>
               <li><Link href="/products" className="hover:text-[#d4a017] transition-colors">جميع المنتجات</Link></li>
             </ul>
           </div>

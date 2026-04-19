@@ -6,18 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHelpers";
 import ProductCard from "@/components/ProductCard";
 import type { Product, Category } from "@/lib/products";
-import { CATEGORY_LABELS } from "@/lib/products";
+import { CATEGORY_LABELS, CATEGORY_OPTIONS, isCategory } from "@/lib/products";
 
 const categoryOptions: { value: Category | "all"; label: string }[] = [
   { value: "all", label: "جميع الفئات" },
-  { value: "antibacterials", label: "💊 مضادات الجراثيم" },
-  { value: "feed-products", label: "🌾 منتجات علفية" },
-  { value: "anti-inflammatory-analgesics", label: "💉 مضادات الالتهاب والمسكنات" },
-  { value: "vitamins-minerals-amino-acids", label: "🌿 الفيتامينات والمعادن" },
-  { value: "anthelmintics", label: "🔬 طاردات الديدان" },
-  { value: "anticoccidials", label: "🛡️ مضادات الأكريات" },
-  { value: "antiprotozoals", label: "🧫 مضادات الأوالي" },
-  { value: "miscellaneous", label: "🧪 منتجات متنوعة" },
+  ...CATEGORY_OPTIONS.map((category) => ({
+    value: category.value,
+    label: `${category.icon} ${category.label}`,
+  })),
 ];
 
 const sortOptions = [
@@ -31,10 +27,6 @@ interface Props {
 }
 
 const PAGE_SIZE = 24;
-
-function isCategory(value: string | null): value is Category {
-  return value !== null && value in CATEGORY_LABELS;
-}
 
 export default function ProductsClient({ initialProducts }: Props) {
   const router = useRouter();

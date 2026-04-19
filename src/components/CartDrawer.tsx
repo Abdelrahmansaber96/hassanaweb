@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import {
+  CATEGORY_ICONS,
   formatProductPrice,
   getCartLinePrice,
   getCartPricingSummary,
@@ -11,17 +12,6 @@ import {
 } from "@/lib/products";
 import { useEffect } from "react";
 import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
-
-const categoryIcons: Record<string, string> = {
-  antibacterials: "💊",
-  "feed-products": "🌾",
-  "anti-inflammatory-analgesics": "💉",
-  "vitamins-minerals-amino-acids": "🌿",
-  anthelmintics: "🔬",
-  anticoccidials: "🛡️",
-  antiprotozoals: "🧫",
-  miscellaneous: "🧪",
-};
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, removeItem, updateQty, clearCart, totalCount } =
@@ -124,7 +114,7 @@ export default function CartDrawer() {
                     >
                       {/* Product icon */}
                       <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#1a5c3a]/10 to-[#2d8a56]/10 flex items-center justify-center flex-none text-2xl">
-                        {categoryIcons[item.product.category]}
+                        {CATEGORY_ICONS[item.product.category]}
                       </div>
 
                       {/* Details */}

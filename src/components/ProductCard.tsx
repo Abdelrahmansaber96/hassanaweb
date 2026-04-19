@@ -4,45 +4,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { type Product, CATEGORY_LABELS, formatProductPrice, isRemoteImageUrl } from "@/lib/products";
+import {
+  CATEGORY_BADGE_CLASSES,
+  CATEGORY_CARD_PLACEHOLDER_GRADIENTS,
+  CATEGORY_ICONS,
+  CATEGORY_LABELS,
+  formatProductPrice,
+  isRemoteImageUrl,
+  type Product,
+} from "@/lib/products";
 import { useCart } from "@/context/CartContext";
 
 interface ProductCardProps {
   product: Product;
 }
-
-const categoryColors: Record<string, string> = {
-  antibacterials: "bg-red-100 text-red-700",
-  "feed-products": "bg-amber-100 text-amber-700",
-  "anti-inflammatory-analgesics": "bg-purple-100 text-purple-700",
-  "vitamins-minerals-amino-acids": "bg-green-100 text-green-700",
-  miscellaneous: "bg-gray-100 text-gray-700",
-  anthelmintics: "bg-blue-100 text-blue-700",
-  anticoccidials: "bg-teal-100 text-teal-700",
-  antiprotozoals: "bg-indigo-100 text-indigo-700",
-};
-
-const categoryIcons: Record<string, string> = {
-  antibacterials: "💊",
-  "feed-products": "🌾",
-  "anti-inflammatory-analgesics": "💉",
-  "vitamins-minerals-amino-acids": "🌿",
-  miscellaneous: "🧪",
-  anthelmintics: "🔬",
-  anticoccidials: "🛡️",
-  antiprotozoals: "🧫",
-};
-
-const placeholderGradients: Record<string, string> = {
-  antibacterials: "from-red-50 to-rose-100",
-  "feed-products": "from-amber-50 to-orange-100",
-  "anti-inflammatory-analgesics": "from-purple-50 to-pink-100",
-  "vitamins-minerals-amino-acids": "from-green-50 to-teal-100",
-  miscellaneous: "from-gray-50 to-slate-100",
-  anthelmintics: "from-blue-50 to-indigo-100",
-  anticoccidials: "from-teal-50 to-cyan-100",
-  antiprotozoals: "from-indigo-50 to-violet-100",
-};
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
@@ -79,7 +54,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         className="relative block overflow-hidden border-b border-[#edf3ee]"
       >
         <div
-          className={`relative aspect-[5/4] ${hasImage ? "bg-[linear-gradient(180deg,#ffffff_0%,#f8fbf9_100%)]" : `bg-gradient-to-br ${placeholderGradients[product.category] || "from-gray-50 to-gray-100"}`} flex items-center justify-center overflow-hidden`}
+          className={`relative aspect-[5/4] ${hasImage ? "bg-[linear-gradient(180deg,#ffffff_0%,#f8fbf9_100%)]" : `bg-gradient-to-br ${CATEGORY_CARD_PLACEHOLDER_GRADIENTS[product.category] || "from-gray-50 to-gray-100"}`} flex items-center justify-center overflow-hidden`}
         >
           {hasImage ? (
             <Image
@@ -96,7 +71,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           ) : (
             <div className="relative z-10 flex flex-col items-center gap-3">
               <div className="flex h-24 w-24 items-center justify-center rounded-[26px] border border-white/50 bg-white/70 backdrop-blur-sm shadow-[0_12px_30px_rgba(29,55,41,0.12)]">
-                <span className="text-4xl">{categoryIcons[product.category] || "💊"}</span>
+                <span className="text-4xl">{CATEGORY_ICONS[product.category] || "💊"}</span>
               </div>
               <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-[#244236] shadow-sm">
                 {CATEGORY_LABELS[product.category] || product.categoryName}
@@ -120,7 +95,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Info */}
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <div className="flex items-start justify-between gap-2">
-          <span className={`inline-flex max-w-[72%] items-center truncate rounded-full px-3 py-1 text-xs font-bold ${categoryColors[product.category] || "bg-gray-100 text-gray-600"}`}>
+          <span className={`inline-flex max-w-[72%] items-center truncate rounded-full px-3 py-1 text-xs font-bold ${CATEGORY_BADGE_CLASSES[product.category] || "bg-gray-100 text-gray-600"}`}>
             {CATEGORY_LABELS[product.category] || product.categoryName}
           </span>
           <span

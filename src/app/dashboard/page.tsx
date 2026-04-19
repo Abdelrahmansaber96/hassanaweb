@@ -7,25 +7,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Product, Category } from "@/lib/products";
 import {
+  CATEGORY_ICONS,
+  CATEGORY_OPTIONS,
   CATEGORY_LABELS as LABELS,
   formatProductPrice,
   isRemoteImageUrl,
 } from "@/lib/products";
 
-const CATEGORY_ICONS: Record<string, string> = {
-  antibacterials: "💊",
-  "feed-products": "🌾",
-  "anti-inflammatory-analgesics": "💉",
-  "vitamins-minerals-amino-acids": "🌿",
-  anthelmintics: "🔬",
-  anticoccidials: "🛡️",
-  antiprotozoals: "🧫",
-  miscellaneous: "🧪",
-};
-
 const emptyForm = {
   name: "",
-  category: "antibacterials" as Category,
+  category: CATEGORY_OPTIONS[0].value as Category,
   manufacturer: "",
   description: "",
   form: "",
@@ -301,6 +292,14 @@ export default function DashboardPage() {
     outOfStock: products.filter((p) => p.inStock === false).length,
     categories: new Set(products.map((p) => p.category)).size,
   };
+  const categoryStats = CATEGORY_OPTIONS.map((option) => ({
+    category: option.value,
+    label: option.label,
+    icon: option.icon,
+    count: products.filter((product) => product.category === option.value).length,
+  }))
+    .filter((option) => option.count > 0)
+    .slice(0, 4);
   const previewImageUrl = form.imageUrl.trim();
   const canPreviewImage =
     previewImageUrl.startsWith("/") || isRemoteImageUrl(previewImageUrl);
@@ -453,8 +452,8 @@ export default function DashboardPage() {
                       }
                       className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1a5c3a] bg-white"
                     >
-                      {Object.entries(LABELS).map(([key, label]) => (
-                        <option key={key} value={key}>{CATEGORY_ICONS[key] || "📦"} {label}</option>
+                      {CATEGORY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.icon} {option.label}</option>
                       ))}
                     </select>
                   </div>
@@ -742,8 +741,8 @@ export default function DashboardPage() {
                 className="px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1a5c3a] bg-white"
               >
                 <option value="all">جميع الفئات</option>
-                {Object.entries(LABELS).map(([key, label]) => (
-                  <option key={key} value={key}>{CATEGORY_ICONS[key] || "📦"} {label}</option>
+                {CATEGORY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.icon} {option.label}</option>
                 ))}
               </select>
             </div>
@@ -932,14 +931,9 @@ export default function DashboardPage() {
                 إجمالي {products.length} منتج — {stats.inStock} متوفر، {stats.outOfStock} نفد
               </p>
               <div className="flex items-center gap-3">
-                {[
-                  { label: "تطعيمات", cat: "vaccines" as Category },
-                  { label: "أدوية", cat: "medicine" as Category },
-                  { label: "فيتامينات", cat: "vitamins" as Category },
-                  { label: "مكملات", cat: "supplements" as Category },
-                ].map((item) => (
-                  <span key={item.cat} className="text-xs text-gray-400">
-                    {CATEGORY_ICONS[item.cat]} {products.filter((p) => p.category === item.cat).length}
+                {categoryStats.map((item) => (
+                  <span key={item.category} className="text-xs text-gray-400">
+                    {item.icon} {item.count}
                   </span>
                 ))}
               </div>
