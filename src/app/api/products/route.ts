@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readProducts, addProduct } from "@/lib/products-server";
-import { products as staticProducts, type Product } from "@/lib/products";
+import {
+  products as staticProducts,
+  CATEGORY_LABELS,
+  type Category,
+  type Product,
+} from "@/lib/products";
 import { requireDashboardAccess } from "@/lib/dashboard-auth";
 
 function parsePriceInput(value: unknown) {
@@ -16,6 +21,40 @@ function parsePriceInput(value: unknown) {
   }
 
   return { valid: true, price: normalizedValue };
+}
+
+function parseOptionalText(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalizedValue = value.trim();
+  return normalizedValue === "" ? null : normalizedValue;
+}
+
+function parseStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  return value
+    .split(/[\n,،]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function isValidCategory(value: unknown): value is Category {
+  return typeof value === "string" && value in CATEGORY_LABELS;
+}
+
+function buildProductSlug(name: string): string {
+  return name.toLowerCase().trim().replace(/\s+/g, "-");
 }
 
 export async function GET() {
@@ -39,10 +78,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsedPrice = parsePriceInput(body.price);
+    const name = String(body.name ?? "").trim();
 
-    if (!body.name || !body.category) {
+    if (!name || !body.category) {
       return NextResponse.json(
         { error: "الحقول المطلوبة: الاسم، الفئة" },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidCategory(body.category)) {
+      return NextResponse.json(
+        { error: "الفئة المختارة غير صالحة" },
         { status: 400 }
       );
     }
@@ -56,21 +103,23 @@ export async function POST(request: NextRequest) {
 
     const newProduct: Product = {
       id: body.id || Date.now().toString(),
-      name: String(body.name),
-      slug: body.slug || String(body.name).toLowerCase().replace(/\s+/g, "-"),
+      name,
+      slug: body.slug || buildProductSlug(name),
       category: body.category,
-      categoryName: body.categoryName || body.category,
+      categoryName: CATEGORY_LABELS[body.category],
       price: parsedPrice.price,
-      form: body.form || null,
-      variants: body.variants || [],
-      manufacturer: String(body.manufacturer || ""),
-      active_ingredients: body.active_ingredients || [],
-      description: body.description || null,
-      indications: body.indications || null,
+      form: parseOptionalText(body.form),
+      variants: parseStringArray(body.variants),
+      manufacturer: String(body.manufacturer ?? "").trim(),
+      active_ingredients: Array.isArray(body.active_ingredients)
+        ? body.active_ingredients
+        : [],
+      description: parseOptionalText(body.description),
+      indications: parseOptionalText(body.indications),
       dosage: body.dosage || null,
-      withdrawal_period: body.withdrawal_period || null,
-      storage: body.storage || null,
-      images: body.images || [],
+      withdrawal_period: parseOptionalText(body.withdrawal_period),
+      storage: parseOptionalText(body.storage),
+      images: parseStringArray(body.images),
       inStock: body.inStock !== false,
     };
 

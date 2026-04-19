@@ -1,11 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Product, Category } from "@/lib/products";
-import { CATEGORY_LABELS as LABELS, formatProductPrice } from "@/lib/products";
+import {
+  CATEGORY_LABELS as LABELS,
+  formatProductPrice,
+  isRemoteImageUrl,
+} from "@/lib/products";
 
 const CATEGORY_ICONS: Record<string, string> = {
   antibacterials: "💊",
@@ -21,13 +26,58 @@ const CATEGORY_ICONS: Record<string, string> = {
 const emptyForm = {
   name: "",
   category: "antibacterials" as Category,
-  description: "",
   manufacturer: "",
+  description: "",
+  form: "",
+  variants: "",
+  imageUrl: "",
   price: "",
   inStock: true,
 };
 
 type FormState = typeof emptyForm;
+
+function getFormStateFromProduct(product: Product): FormState {
+  return {
+    name: product.name,
+    category: product.category,
+    manufacturer: product.manufacturer,
+    description: product.description ?? "",
+    form: product.form ?? "",
+    variants: product.variants.join(", "),
+    imageUrl: product.images[0] ?? "",
+    price: typeof product.price === "number" ? String(product.price) : "",
+    inStock: product.inStock !== false,
+  };
+}
+
+function parseVariantsInput(value: string): string[] {
+  return value
+    .split(/[\n,،]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildProductPayload(form: FormState) {
+  const name = form.name.trim();
+  const manufacturer = form.manufacturer.trim();
+  const description = form.description.trim();
+  const productForm = form.form.trim();
+  const imageUrl = form.imageUrl.trim();
+
+  return {
+    name,
+    category: form.category,
+    categoryName: LABELS[form.category],
+    manufacturer,
+    description: description === "" ? null : description,
+    form: productForm === "" ? null : productForm,
+    variants: parseVariantsInput(form.variants),
+    images: imageUrl === "" ? [] : [imageUrl],
+    price: form.price === "" ? null : Number(form.price),
+    inStock: form.inStock,
+  };
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -35,7 +85,10 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageInputKey, setImageInputKey] = useState(0);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState("");
@@ -50,6 +103,30 @@ export default function DashboardPage() {
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
+  };
+
+  const isEditing = editingProductId !== null;
+
+  const closeFormModal = useCallback(() => {
+    setShowForm(false);
+    setEditingProductId(null);
+    setForm(emptyForm);
+    setUploadingImage(false);
+    setImageInputKey((current) => current + 1);
+  }, []);
+
+  const openCreateForm = () => {
+    setEditingProductId(null);
+    setForm(emptyForm);
+    setImageInputKey((current) => current + 1);
+    setShowForm(true);
+  };
+
+  const openEditForm = (product: Product) => {
+    setEditingProductId(product.id);
+    setForm(getFormStateFromProduct(product));
+    setImageInputKey((current) => current + 1);
+    setShowForm(true);
   };
 
   const handleLogout = async () => {
@@ -82,16 +159,57 @@ export default function DashboardPage() {
     fetchProducts();
   }, [fetchProducts]);
 
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.set("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.error || "فشل رفع الصورة");
+      }
+
+      const data = (await res.json()) as { url: string };
+      setForm((current) => ({ ...current, imageUrl: data.url }));
+      showToast("تم رفع صورة المنتج بنجاح", "success");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "فشل رفع الصورة",
+        "error"
+      );
+    } finally {
+      setUploadingImage(false);
+      setImageInputKey((current) => current + 1);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const body = {
-        ...form,
-        price: form.price === "" ? null : Number(form.price),
-      };
-      const res = await fetch("/api/products", {
-        method: "POST",
+      const body = buildProductPayload(form);
+      const endpoint = isEditing
+        ? `/api/products/${editingProductId}`
+        : "/api/products";
+      const method = isEditing ? "PATCH" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
@@ -100,11 +218,13 @@ export default function DashboardPage() {
         throw new Error(err.error || "خطأ");
       }
       await fetchProducts();
-      setForm(emptyForm);
-      setShowForm(false);
-      showToast("✅ تمت إضافة المنتج بنجاح", "success");
+      closeFormModal();
+      showToast(
+        isEditing ? "✅ تم تحديث المنتج بنجاح" : "✅ تمت إضافة المنتج بنجاح",
+        "success"
+      );
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "حدث خطأ أثناء الإضافة", "error");
+      showToast(err instanceof Error ? err.message : "حدث خطأ أثناء الحفظ", "error");
     } finally {
       setSubmitting(false);
     }
@@ -181,12 +301,16 @@ export default function DashboardPage() {
     outOfStock: products.filter((p) => p.inStock === false).length,
     categories: new Set(products.map((p) => p.category)).size,
   };
+  const previewImageUrl = form.imageUrl.trim();
+  const canPreviewImage =
+    previewImageUrl.startsWith("/") || isRemoteImageUrl(previewImageUrl);
 
   const field = (
     label: string,
     key: keyof FormState,
     type: string = "text",
-    required = false
+    required = false,
+    placeholder = ""
   ) => (
     <div>
       <label className="block text-xs font-semibold text-gray-600 mb-1.5">
@@ -197,6 +321,7 @@ export default function DashboardPage() {
         required={required}
         value={form[key] as string | number}
         onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+        placeholder={placeholder}
         className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1a5c3a] transition-colors"
       />
     </div>
@@ -275,7 +400,11 @@ export default function DashboardPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto pt-24"
-            onClick={() => !submitting && setShowForm(false)}
+            onClick={() => {
+              if (!submitting && !uploadingImage) {
+                closeFormModal();
+              }
+            }}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -287,12 +416,19 @@ export default function DashboardPage() {
               {/* Form Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
                 <div>
-                  <h2 className="text-xl font-extrabold text-[#1a1a2e]">إضافة منتج جديد</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">أدخل بيانات المنتج بالكامل</p>
+                  <h2 className="text-xl font-extrabold text-[#1a1a2e]">
+                    {isEditing ? "تعديل المنتج" : "إضافة منتج جديد"}
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {isEditing
+                      ? "حدّث بيانات المنتج والصورة والسعر من مكان واحد"
+                      : "أدخل بيانات المنتج بالكامل وارفع صورته"}
+                  </p>
                 </div>
                 <button
-                  onClick={() => setShowForm(false)}
-                  className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors text-gray-500"
+                  onClick={closeFormModal}
+                  disabled={submitting || uploadingImage}
+                  className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors text-gray-500 disabled:opacity-60"
                 >
                   ✕
                 </button>
@@ -301,7 +437,7 @@ export default function DashboardPage() {
               {/* Form Body */}
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 {/* Name */}
-                {field("اسم المنتج", "name", "text", true)}
+                {field("اسم المنتج", "name", "text", true, "مثال: أمينوفيت 1 لتر")}
 
                 {/* Category */}
                 <div className="grid grid-cols-2 gap-4">
@@ -322,7 +458,12 @@ export default function DashboardPage() {
                       ))}
                     </select>
                   </div>
-                  {field("الشركة المصنّعة", "manufacturer", "text", true)}
+                  {field("الشركة المصنّعة", "manufacturer", "text", true, "اسم الشركة المصنّعة")}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {field("الشكل الدوائي", "form", "text", false, "مثال: محلول فموي")}
+                  {field("العبوات أو الأحجام", "variants", "text", false, "مثال: 250 مل، 1 لتر")}
                 </div>
 
                 {/* Description */}
@@ -334,6 +475,94 @@ export default function DashboardPage() {
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                     className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1a5c3a] transition-colors resize-none"
                   />
+                </div>
+
+                <div className="rounded-2xl border border-gray-200 bg-[#f8fbf9] p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-[#1a1a2e]">صورة المنتج</h3>
+                      <p className="text-xs text-gray-500 mt-1">
+                        ارفع صورة من جهازك أو أضف رابط صورة مباشر.
+                      </p>
+                    </div>
+                    {form.imageUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setForm((current) => ({ ...current, imageUrl: "" }))}
+                        className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors"
+                      >
+                        حذف الصورة الحالية
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-[180px,1fr]">
+                    <div className="relative h-40 overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-white">
+                      {previewImageUrl && canPreviewImage ? (
+                        <Image
+                          src={previewImageUrl}
+                          alt={form.name || "صورة المنتج"}
+                          fill
+                          className="object-contain p-3"
+                          sizes="180px"
+                          unoptimized={isRemoteImageUrl(previewImageUrl)}
+                          referrerPolicy={isRemoteImageUrl(previewImageUrl) ? "no-referrer" : undefined}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-400">
+                          <span className="text-3xl">🖼️</span>
+                          <span className="text-xs font-medium">
+                            {previewImageUrl
+                              ? "الرابط الحالي غير صالح للمعاينة"
+                              : "لا توجد صورة مضافة"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        <label
+                          htmlFor="product-image-upload"
+                          className={`inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-bold transition-colors cursor-pointer ${
+                            uploadingImage
+                              ? "bg-gray-200 text-gray-500"
+                              : "bg-[#1a5c3a] text-white hover:bg-[#13452b]"
+                          }`}
+                        >
+                          {uploadingImage ? "جارٍ رفع الصورة..." : "رفع صورة من الجهاز"}
+                        </label>
+                        <input
+                          key={imageInputKey}
+                          id="product-image-upload"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          onChange={handleImageUpload}
+                          disabled={uploadingImage || submitting}
+                          className="hidden"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                          رابط الصورة
+                        </label>
+                        <input
+                          type="url"
+                          value={form.imageUrl}
+                          onChange={(e) =>
+                            setForm((current) => ({ ...current, imageUrl: e.target.value }))
+                          }
+                          placeholder="https://example.com/product.jpg"
+                          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1a5c3a] transition-colors"
+                        />
+                      </div>
+
+                      <p className="text-xs text-gray-500 leading-6">
+                        الصورة المرفوعة ستُستخدم مباشرة في الكارت وصفحة المنتج. يمكنك لاحقًا استبدالها من نفس النموذج.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -374,16 +603,21 @@ export default function DashboardPage() {
                 <div className="flex gap-3 pt-2">
                   <motion.button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || uploadingImage}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-[#1a5c3a] to-[#2d8a56] text-white font-bold text-sm shadow-lg hover:opacity-90 transition-opacity disabled:opacity-60"
                   >
-                    {submitting ? "جارٍ الحفظ..." : "حفظ المنتج"}
+                    {submitting
+                      ? "جارٍ الحفظ..."
+                      : isEditing
+                        ? "حفظ التعديلات"
+                        : "حفظ المنتج"}
                   </motion.button>
                   <button
                     type="button"
-                    onClick={() => { setShowForm(false); setForm(emptyForm); }}
+                    onClick={closeFormModal}
+                    disabled={submitting || uploadingImage}
                     className="px-6 py-3.5 rounded-2xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:border-gray-300 transition-colors"
                   >
                     إلغاء
@@ -425,7 +659,7 @@ export default function DashboardPage() {
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => { setForm(emptyForm); setShowForm(true); }}
+              onClick={openCreateForm}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#1a5c3a] to-[#2d8a56] text-white text-sm font-bold shadow-lg"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -562,8 +796,24 @@ export default function DashboardPage() {
                         {/* Name + Badge */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-lg flex-none">
-                              {CATEGORY_ICONS[product.category]}
+                            <div className="relative w-11 h-11 overflow-hidden rounded-xl border border-gray-100 bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-lg flex-none">
+                              {product.images?.[0] ? (
+                                <Image
+                                  src={product.images[0]}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="44px"
+                                  unoptimized={isRemoteImageUrl(product.images[0])}
+                                  referrerPolicy={
+                                    isRemoteImageUrl(product.images[0])
+                                      ? "no-referrer"
+                                      : undefined
+                                  }
+                                />
+                              ) : (
+                                <span>{CATEGORY_ICONS[product.category]}</span>
+                              )}
                             </div>
                             <div className="min-w-0">
                               <p className="font-semibold text-[#1a1a2e] leading-tight truncate max-w-[200px]">
@@ -632,6 +882,17 @@ export default function DashboardPage() {
                         {/* Actions */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => openEditForm(product)}
+                              className="p-2 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+                              title="تعديل المنتج"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </motion.button>
                             <Link
                               href={`/products/${product.id}`}
                               target="_blank"

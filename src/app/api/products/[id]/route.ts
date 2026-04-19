@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readProducts, deleteProduct, updateProduct } from "@/lib/products-server";
-import { products as staticProducts } from "@/lib/products";
+import {
+  products as staticProducts,
+  CATEGORY_LABELS,
+  type Category,
+  type Product,
+} from "@/lib/products";
 import { requireDashboardAccess } from "@/lib/dashboard-auth";
 
 function parsePriceInput(value: unknown) {
@@ -16,6 +21,40 @@ function parsePriceInput(value: unknown) {
   }
 
   return { valid: true, price: normalizedValue };
+}
+
+function parseOptionalText(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalizedValue = value.trim();
+  return normalizedValue === "" ? null : normalizedValue;
+}
+
+function parseStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  return value
+    .split(/[\n,،]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function isValidCategory(value: unknown): value is Category {
+  return typeof value === "string" && value in CATEGORY_LABELS;
+}
+
+function buildProductSlug(name: string): string {
+  return name.toLowerCase().trim().replace(/\s+/g, "-");
 }
 
 export async function GET(
@@ -71,22 +110,85 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const parsedPrice = parsePriceInput(body.price);
+    const updates: Partial<Product> = {};
 
-    if (!parsedPrice.valid) {
+    if ("price" in body) {
+      const parsedPrice = parsePriceInput(body.price);
+
+      if (!parsedPrice.valid) {
+        return NextResponse.json(
+          { error: "السعر يجب أن يكون رقمًا صحيحًا أو فارغًا" },
+          { status: 400 }
+        );
+      }
+
+      updates.price = parsedPrice.price;
+    }
+
+    if ("name" in body) {
+      const name = String(body.name ?? "").trim();
+
+      if (!name) {
+        return NextResponse.json(
+          { error: "اسم المنتج مطلوب" },
+          { status: 400 }
+        );
+      }
+
+      updates.name = name;
+      updates.slug = buildProductSlug(name);
+    }
+
+    if ("category" in body) {
+      if (!isValidCategory(body.category)) {
+        return NextResponse.json(
+          { error: "الفئة المختارة غير صالحة" },
+          { status: 400 }
+        );
+      }
+
+      updates.category = body.category;
+      updates.categoryName = CATEGORY_LABELS[body.category];
+    }
+
+    if ("manufacturer" in body) {
+      updates.manufacturer = String(body.manufacturer ?? "").trim();
+    }
+
+    if ("description" in body) {
+      updates.description = parseOptionalText(body.description);
+    }
+
+    if ("form" in body) {
+      updates.form = parseOptionalText(body.form);
+    }
+
+    if ("variants" in body) {
+      updates.variants = parseStringArray(body.variants);
+    }
+
+    if ("images" in body) {
+      updates.images = parseStringArray(body.images);
+    }
+
+    if ("inStock" in body) {
+      updates.inStock = body.inStock !== false;
+    }
+
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json(
-        { error: "السعر يجب أن يكون رقمًا صحيحًا أو فارغًا" },
+        { error: "لا توجد بيانات لتحديثها" },
         { status: 400 }
       );
     }
 
-    const updated = await updateProduct(id, { price: parsedPrice.price });
+    const updated = await updateProduct(id, updates);
 
     if (!updated) {
       return NextResponse.json({ error: "المنتج غير موجود" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, price: parsedPrice.price });
+    return NextResponse.json({ success: true, updates });
   } catch {
     return NextResponse.json({ error: "خطأ في الخادم" }, { status: 500 });
   }
