@@ -69,7 +69,7 @@ const primaryWhatsAppContact = whatsappContacts[0];
 
 export const siteConfig = {
   name: "حصانة فيت",
-  tagline: "صيدلية بيطرية فقط",
+  tagline: "صيدلية بيطرية",
   summary:
     "أدوية بيطرية ومكملات ومعدات بيطرية موثوقة لرعاية الماشية داخل المملكة.",
   description:
