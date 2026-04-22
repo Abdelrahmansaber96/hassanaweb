@@ -2,10 +2,26 @@ import HomePageClient from "@/components/HomePageClient";
 import { CATEGORY_ORDER, type Category } from "@/lib/products";
 import { readProductsWithFallback } from "@/lib/products-server";
 
+function shuffleProducts<T>(products: T[]) {
+  const shuffledProducts = [...products];
+
+  for (let index = shuffledProducts.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+
+    [shuffledProducts[index], shuffledProducts[randomIndex]] = [
+      shuffledProducts[randomIndex],
+      shuffledProducts[index],
+    ];
+  }
+
+  return shuffledProducts;
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const products = await readProductsWithFallback();
+  const randomizedProducts = shuffleProducts(products);
   const counts = products.reduce((acc, product) => {
     acc[product.category] = (acc[product.category] || 0) + 1;
     return acc;
@@ -22,8 +38,8 @@ export default async function HomePage() {
     <HomePageClient
       productCount={products.length}
       categoryCounts={categoryCounts}
-      showcaseProducts={products.slice(0, 8)}
-      moreProducts={products.slice(8, 16)}
+      showcaseProducts={randomizedProducts.slice(0, 8)}
+      moreProducts={randomizedProducts.slice(8, 16)}
     />
   );
 }

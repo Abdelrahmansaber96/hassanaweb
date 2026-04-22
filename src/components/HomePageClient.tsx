@@ -79,7 +79,7 @@ export default function HomePageClient({
                 priority
               />
             </span>
-            صيدلية النخلة البيطرية 
+            {siteConfig.tagline}
           </motion.div>
 
           <motion.h1

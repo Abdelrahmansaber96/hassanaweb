@@ -145,7 +145,7 @@ export default function Navbar() {
               <span className="font-extrabold text-[#1a5c3a] text-base tracking-tight">
                 حصانة فيت
               </span>
-              <span className="text-[10px] text-gray-400 font-medium">صيدلية النخلة البيطرية</span>
+              <span className="text-[10px] text-gray-400 font-medium">{siteConfig.tagline}</span>
             </div>
           </Link>
 

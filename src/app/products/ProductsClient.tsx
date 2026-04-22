@@ -24,11 +24,17 @@ const sortOptions = [
 
 interface Props {
   initialProducts: Product[];
+  randomizedProducts: Product[];
 }
 
 const PAGE_SIZE = 24;
 
-export default function ProductsClient({ initialProducts }: Props) {
+type MobileViewMode = "grid" | "single";
+
+export default function ProductsClient({
+  initialProducts,
+  randomizedProducts,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -41,6 +47,11 @@ export default function ProductsClient({ initialProducts }: Props) {
   const [sort, setSort] = useState("default");
   const [searchFocused, setSearchFocused] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [mobileViewMode, setMobileViewMode] = useState<MobileViewMode>("grid");
+  const trimmedSearch = search.trim();
+  const shouldUseRandomizedOrder =
+    category === "all" && trimmedSearch === "" && sort === "default";
+  const mobileGridColumns = mobileViewMode === "grid" ? "grid-cols-2" : "grid-cols-1";
 
   const updateCategory = (nextCategory: Category | "all") => {
     const params = new URLSearchParams(searchParams.toString());
@@ -74,13 +85,16 @@ export default function ProductsClient({ initialProducts }: Props) {
   };
 
   const filtered = useMemo(() => {
-    let result = [...initialProducts];
+    const baseProducts = shouldUseRandomizedOrder
+      ? randomizedProducts
+      : initialProducts;
+    let result = [...baseProducts];
 
     if (category !== "all") {
       result = result.filter((p) => p.category === category);
     }
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (trimmedSearch) {
+      const q = trimmedSearch.toLowerCase();
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
@@ -101,10 +115,10 @@ export default function ProductsClient({ initialProducts }: Props) {
     }
 
     return result;
-  }, [initialProducts, category, search, sort]);
+  }, [initialProducts, randomizedProducts, category, trimmedSearch, sort, shouldUseRandomizedOrder]);
 
   const activeFilters =
-    (category !== "all" ? 1 : 0) + (search.trim() ? 1 : 0);
+    (category !== "all" ? 1 : 0) + (trimmedSearch ? 1 : 0);
 
   const visibleProducts = filtered.slice(0, visibleCount);
 
@@ -222,9 +236,40 @@ export default function ProductsClient({ initialProducts }: Props) {
       </AnimatePresence>
 
       {/* Result count */}
-      <p className="text-gray-500 text-sm mb-6">
-        عرض {visibleProducts.length} من أصل {filtered.length} منتج
-      </p>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <p className="text-gray-500 text-sm">
+          عرض {visibleProducts.length} من أصل {filtered.length} منتج
+        </p>
+
+        <div className="inline-flex items-center gap-1 rounded-2xl border border-[#dbe6df] bg-white p-1 shadow-sm md:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileViewMode("grid")}
+            aria-pressed={mobileViewMode === "grid"}
+            aria-label="عرض منتجين في الصف"
+            className={`rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
+              mobileViewMode === "grid"
+                ? "bg-[#1a5c3a] text-white"
+                : "text-gray-500 hover:bg-[#1a5c3a]/8 hover:text-[#1a5c3a]"
+            }`}
+          >
+            2 في الصف
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileViewMode("single")}
+            aria-pressed={mobileViewMode === "single"}
+            aria-label="عرض منتج واحد في الصف"
+            className={`rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
+              mobileViewMode === "single"
+                ? "bg-[#1a5c3a] text-white"
+                : "text-gray-500 hover:bg-[#1a5c3a]/8 hover:text-[#1a5c3a]"
+            }`}
+          >
+            1 في الصف
+          </button>
+        </div>
+      </div>
 
       {/* Grid */}
       {filtered.length === 0 ? (
@@ -235,7 +280,9 @@ export default function ProductsClient({ initialProducts }: Props) {
         </FadeIn>
       ) : (
         <>
-          <StaggerContainer className="grid grid-cols-1 items-stretch sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <StaggerContainer
+            className={`grid ${mobileGridColumns} items-stretch gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3 xl:grid-cols-4`}
+          >
           {visibleProducts.map((product) => (
             <StaggerItem key={product.id} className="h-full">
               <ProductCard product={product} />

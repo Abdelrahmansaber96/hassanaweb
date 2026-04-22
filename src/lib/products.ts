@@ -21,6 +21,15 @@ const CATEGORY_DEFINITIONS = [
     homeGradient: "from-rose-600 to-pink-500",
   },
   {
+    id: "hormones",
+    label: "أدوية هرمونات",
+    icon: "⚗️",
+    badgeClass: "bg-purple-100 text-purple-700",
+    cardPlaceholderGradient: "from-purple-50 to-fuchsia-100",
+    detailPlaceholderGradient: "from-purple-100 to-fuchsia-200",
+    homeGradient: "from-purple-600 to-fuchsia-500",
+  },
+  {
     id: "dewormers-mange-parasites",
     label: "أدوية ديدان وجرب وطفيليات",
     icon: "🐛",
@@ -40,7 +49,7 @@ const CATEGORY_DEFINITIONS = [
   },
   {
     id: "injectable-vitamins-minerals",
-    label: "فيتامينات ومعادن حقن",
+    label: "فيتامينات ومعادن ",
     icon: "🧬",
     badgeClass: "bg-emerald-100 text-emerald-700",
     cardPlaceholderGradient: "from-emerald-50 to-teal-100",
@@ -49,7 +58,7 @@ const CATEGORY_DEFINITIONS = [
   },
   {
     id: "oral-vitamins-minerals",
-    label: "فيتامينات ومعادن شراب",
+    label: "فيتامينات ومعادن ",
     icon: "🌿",
     badgeClass: "bg-lime-100 text-lime-700",
     cardPlaceholderGradient: "from-lime-50 to-green-100",
@@ -277,6 +286,38 @@ const TOPICAL_KEYWORDS = [
   "gel",
 ];
 
+const HORMONE_KEYWORDS = [
+  "هرمون",
+  "هرمونات",
+  "hormone",
+  "hormonal",
+  "hormones",
+  "اوكسيتوسين",
+  "أوكسيتوسين",
+  "oxytocin",
+  "كلوبروستنول",
+  "cloprostenol",
+  "دينوبروست",
+  "dinoprost",
+  "بوسيريلين",
+  "buserelin",
+  "بروجستيرون",
+  "progesterone",
+  "استروجين",
+  "estrogen",
+  "إستراديول",
+  "estradiol",
+  "جونادوريلين",
+  "gonadorelin",
+  "gonadotropin",
+  "gonadotropins",
+  "hcg",
+  "gnrh",
+  "ديكساميثازون",
+  "ديكساميتازون",
+  "dexamethasone",
+] as const;
+
 const BLOOD_PARASITE_KEYWORDS = [
   "طفيليات دم",
   "هيام",
@@ -406,12 +447,16 @@ export function isCategory(value: unknown): value is Category {
   );
 }
 
-function buildProductSearchText(product: RawProduct): string {
-  const activeIngredients = normalizeActiveIngredients(product.active_ingredients)
+function buildActiveIngredientsSearchText(product: RawProduct) {
+  return normalizeActiveIngredients(product.active_ingredients)
     .flatMap((ingredient) =>
       [ingredient.name, ingredient.concentration].filter(Boolean)
     )
     .join(" ");
+}
+
+function buildProductSearchText(product: RawProduct): string {
+  const activeIngredients = buildActiveIngredientsSearchText(product);
 
   return [
     product.name,
@@ -424,6 +469,18 @@ function buildProductSearchText(product: RawProduct): string {
     normalizeStringArray(product.variants).join(" "),
     normalizeStringArray(product.images).join(" "),
     activeIngredients,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function buildHormoneSearchText(product: RawProduct): string {
+  return [
+    product.name,
+    product.category,
+    product.categoryName,
+    buildActiveIngredientsSearchText(product),
   ]
     .filter(Boolean)
     .join(" ")
@@ -444,6 +501,7 @@ function normalizeCategory(rawCategory: string | null | undefined, product: RawP
   }
 
   const searchText = buildProductSearchText(product);
+  const hormoneSearchText = buildHormoneSearchText(product);
 
   if (hasAnyKeyword(searchText, VACCINE_KEYWORDS)) {
     return "vaccines";
@@ -451,6 +509,10 @@ function normalizeCategory(rawCategory: string | null | undefined, product: RawP
 
   if (hasAnyKeyword(searchText, BLOOD_PARASITE_KEYWORDS)) {
     return "blood-parasites-heyam";
+  }
+
+  if (hasAnyKeyword(hormoneSearchText, HORMONE_KEYWORDS)) {
+    return "hormones";
   }
 
   if (hasAnyKeyword(searchText, EQUIPMENT_KEYWORDS)) {
