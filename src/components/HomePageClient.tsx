@@ -192,9 +192,9 @@ export default function HomePageClient({
 
           <StaggerContainer className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {categoryCounts.map(({ category, count }) => (
-              <StaggerItem key={category}>
-                <Link href={`/products?category=${category}`} className={`relative block rounded-2xl overflow-hidden bg-gradient-to-br ${CATEGORY_HOME_GRADIENTS[category] || "from-gray-600 to-gray-400"} group`}>
-                  <div className="relative flex min-h-[10.5rem] flex-col items-center gap-2 p-5 text-center text-white sm:min-h-[11rem] sm:p-6">
+              <StaggerItem key={category} className="h-full">
+                <Link href={`/products?category=${category}`} className={`relative flex h-full rounded-2xl overflow-hidden bg-gradient-to-br ${CATEGORY_HOME_GRADIENTS[category] || "from-gray-600 to-gray-400"} group`}>
+                  <div className="relative flex h-full min-h-[10.5rem] w-full flex-col items-center justify-between gap-2 p-5 text-center text-white sm:min-h-[11rem] sm:p-6">
                     <span className="text-4xl transition-transform duration-300 group-hover:scale-110 sm:text-[2.65rem]">{CATEGORY_ICONS[category] || "📦"}</span>
                     <h3 className="text-sm font-bold leading-6 sm:text-base">{CATEGORY_LABELS[category]}</h3>
                     <p className="text-[11px] leading-relaxed text-white/72 sm:text-xs">
