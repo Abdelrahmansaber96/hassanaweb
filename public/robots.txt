@@ -1,0 +1,12 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /cart
+
+# Host
+Host: https://www.hassana-ksa.com
+
+# Sitemaps
+Sitemap: https://www.hassana-ksa.com/sitemap.xml

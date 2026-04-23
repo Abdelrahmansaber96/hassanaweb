@@ -9,6 +9,9 @@ import {
   formatProductPrice,
   getCartLinePrice,
   getCartPricingSummary,
+  getDiscountedProductPrice,
+  getNumericProductPrice,
+  getProductDiscountPercentage,
   getCartWhatsAppMessage,
 } from "@/lib/products";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHelpers";
@@ -78,7 +81,17 @@ export default function CartPage() {
             <div className="lg:col-span-2 space-y-4">
               <StaggerContainer>
                 <AnimatePresence initial={false}>
-                  {items.map((item) => (
+                  {items.map((item) => {
+                    const baseUnitPrice = getNumericProductPrice(item.product.price);
+                    const discountedUnitPrice = getDiscountedProductPrice(item.product);
+                    const discountPercentage = getProductDiscountPercentage(item.product);
+                    const hasDiscount =
+                      baseUnitPrice !== null &&
+                      discountedUnitPrice !== null &&
+                      discountPercentage !== null &&
+                      discountedUnitPrice < baseUnitPrice;
+
+                    return (
                     <StaggerItem key={item.product.id}>
                       <motion.div
                         layout
@@ -119,9 +132,14 @@ export default function CartPage() {
                           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                             <div className="rounded-2xl border border-[#edf2ee] bg-[#f8fbf9] px-3 py-2.5">
                               <p className="text-[10px] font-bold text-gray-400">سعر الوحدة</p>
-                              <p className="mt-1 text-sm font-extrabold text-[#1a5c3a]">
-                                {formatProductPrice(item.product.price)}
+                              <p className={`mt-1 text-sm font-extrabold ${hasDiscount ? "text-[#d0671c]" : "text-[#1a5c3a]"}`}>
+                                {formatProductPrice(discountedUnitPrice)}
                               </p>
+                              {hasDiscount && (
+                                <p className="mt-1 text-[11px] font-bold text-gray-400 line-through">
+                                  {formatProductPrice(baseUnitPrice)}
+                                </p>
+                              )}
                             </div>
                             <div className="rounded-2xl border border-[#edf2ee] bg-white px-3 py-2.5">
                               <p className="text-[10px] font-bold text-gray-400">إجمالي الصنف</p>
@@ -162,7 +180,8 @@ export default function CartPage() {
                         </div>
                       </motion.div>
                     </StaggerItem>
-                  ))}
+                  );
+                  })}
                 </AnimatePresence>
               </StaggerContainer>
 

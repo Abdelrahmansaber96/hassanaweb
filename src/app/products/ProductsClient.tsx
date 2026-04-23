@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/AnimationHelpers";
 import ProductCard from "@/components/ProductCard";
 import type { Product, Category } from "@/lib/products";
-import { CATEGORY_LABELS, CATEGORY_OPTIONS, isCategory } from "@/lib/products";
+import { CATEGORY_LABELS, CATEGORY_OPTIONS, isCategory, isProductInCategory } from "@/lib/products";
 
 const categoryOptions: { value: Category | "all"; label: string }[] = [
   { value: "all", label: "جميع الفئات" },
@@ -91,7 +91,7 @@ export default function ProductsClient({
     let result = [...baseProducts];
 
     if (category !== "all") {
-      result = result.filter((p) => p.category === category);
+      result = result.filter((product) => isProductInCategory(product, category));
     }
     if (trimmedSearch) {
       const q = trimmedSearch.toLowerCase();

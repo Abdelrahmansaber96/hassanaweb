@@ -23,6 +23,56 @@ function parsePriceInput(value: unknown) {
   return { valid: true, price: normalizedValue };
 }
 
+function parseDiscountPercentageInput(value: unknown) {
+  if (value === "" || value === null || value === undefined) {
+    return { valid: true, discountPercentage: null as number | null };
+  }
+
+  const normalizedValue =
+    typeof value === "number" ? value : Number(String(value).trim());
+
+  if (!Number.isFinite(normalizedValue) || normalizedValue <= 0 || normalizedValue > 50) {
+    return { valid: false, discountPercentage: null as number | null };
+  }
+
+  return { valid: true, discountPercentage: normalizedValue };
+}
+
+function parseOfferInput(value: unknown) {
+  if (value === null || value === undefined) {
+    return { valid: true, offer: null as Product["offer"] };
+  }
+
+  if (typeof value !== "object") {
+    return { valid: false, offer: null as Product["offer"] };
+  }
+
+  const offerValue = value as {
+    enabled?: unknown;
+    discountPercentage?: unknown;
+  };
+
+  if (offerValue.enabled !== true) {
+    return { valid: true, offer: null as Product["offer"] };
+  }
+
+  const parsedDiscountPercentage = parseDiscountPercentageInput(
+    offerValue.discountPercentage
+  );
+
+  if (!parsedDiscountPercentage.valid || parsedDiscountPercentage.discountPercentage === null) {
+    return { valid: false, offer: null as Product["offer"] };
+  }
+
+  return {
+    valid: true,
+    offer: {
+      enabled: true,
+      discountPercentage: parsedDiscountPercentage.discountPercentage,
+    } satisfies NonNullable<Product["offer"]>,
+  };
+}
+
 function parseOptionalText(value: unknown): string | null {
   if (typeof value !== "string") {
     return null;
@@ -123,6 +173,19 @@ export async function PATCH(
       }
 
       updates.price = parsedPrice.price;
+    }
+
+    if ("offer" in body) {
+      const parsedOffer = parseOfferInput(body.offer);
+
+      if (!parsedOffer.valid) {
+        return NextResponse.json(
+          { error: "نسبة الخصم يجب أن تكون بين 1 و50" },
+          { status: 400 }
+        );
+      }
+
+      updates.offer = parsedOffer.offer;
     }
 
     if ("name" in body) {

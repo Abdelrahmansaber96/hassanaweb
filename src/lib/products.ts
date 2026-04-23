@@ -30,6 +30,15 @@ const CATEGORY_DEFINITIONS = [
     homeGradient: "from-purple-600 to-fuchsia-500",
   },
   {
+    id: "offers-discounts-up-to-50",
+    label: "عروض وخصومات تصل إلى 50%",
+    icon: "🏷️",
+    badgeClass: "bg-red-100 text-red-700",
+    cardPlaceholderGradient: "from-red-50 to-orange-100",
+    detailPlaceholderGradient: "from-red-100 to-orange-200",
+    homeGradient: "from-red-600 to-orange-500",
+  },
+  {
     id: "dewormers-mange-parasites",
     label: "أدوية ديدان وجرب وطفيليات",
     icon: "🐛",
@@ -64,6 +73,15 @@ const CATEGORY_DEFINITIONS = [
     cardPlaceholderGradient: "from-lime-50 to-green-100",
     detailPlaceholderGradient: "from-lime-100 to-green-200",
     homeGradient: "from-lime-600 to-emerald-500",
+  },
+  {
+    id: "milk",
+    label: "حليب",
+    icon: "🥛",
+    badgeClass: "bg-blue-100 text-blue-700",
+    cardPlaceholderGradient: "from-blue-50 to-sky-100",
+    detailPlaceholderGradient: "from-blue-100 to-sky-200",
+    homeGradient: "from-sky-600 to-blue-500",
   },
   {
     id: "fattening-bone-growth",
@@ -119,13 +137,28 @@ const CATEGORY_DEFINITIONS = [
     detailPlaceholderGradient: "from-teal-100 to-emerald-200",
     homeGradient: "from-teal-600 to-emerald-500",
   },
+  {
+    id: "others",
+    label: "أخرى",
+    icon: "📦",
+    badgeClass: "bg-stone-100 text-stone-700",
+    cardPlaceholderGradient: "from-stone-50 to-zinc-100",
+    detailPlaceholderGradient: "from-stone-100 to-zinc-200",
+    homeGradient: "from-stone-600 to-neutral-500",
+  },
 ] as const;
 
 export type Category = (typeof CATEGORY_DEFINITIONS)[number]["id"];
+export const OFFERS_CATEGORY: Category = "offers-discounts-up-to-50";
 
 export interface ActiveIngredient {
   name: string;
   concentration: string | null;
+}
+
+export interface ProductOffer {
+  enabled: boolean;
+  discountPercentage: number;
 }
 
 export interface Product {
@@ -135,6 +168,7 @@ export interface Product {
   category: Category;
   categoryName: string;
   price?: number | null;
+  offer: ProductOffer | null;
   form: string | null;
   variants: string[];
   manufacturer: string;
@@ -178,6 +212,7 @@ type RawProduct = Partial<Omit<Product, "category" | "categoryName">> & {
   images?: unknown;
   inStock?: boolean;
   price?: unknown;
+  offer?: unknown;
 };
 
 function mapCategoryValues<T>(
@@ -318,6 +353,39 @@ const HORMONE_KEYWORDS = [
   "dexamethasone",
 ] as const;
 
+const OFFER_CATEGORY_SIGNALS = [
+  "offers-discounts-up-to-50",
+  "offers-discounts",
+  "offers",
+  "discounts",
+  "offer",
+  "discount",
+  "عروض",
+  "عرض",
+  "خصومات",
+  "عروض وخصومات",
+  "عروض وخصومات تصل الى 50%",
+  "عروض وخصومات تصل إلى 50%",
+] as const;
+
+const MILK_CATEGORY_SIGNALS = [
+  "milk",
+  "حليب",
+  "منتجات حليب",
+  "milk products",
+  "milk replacer",
+  "بديل حليب",
+] as const;
+
+const OTHER_CATEGORY_SIGNALS = [
+  "other",
+  "others",
+  "misc",
+  "miscellaneous",
+  "أخرى",
+  "اخرى",
+] as const;
+
 const BLOOD_PARASITE_KEYWORDS = [
   "طفيليات دم",
   "هيام",
@@ -378,6 +446,13 @@ function normalizeText(value: unknown): string | null {
   return normalizedValue === "" ? null : normalizedValue;
 }
 
+function hasCategorySignal(values: unknown[], signals: readonly string[]) {
+  return values.some((value) => {
+    const normalizedValue = normalizeText(value)?.toLowerCase();
+    return normalizedValue ? signals.includes(normalizedValue) : false;
+  });
+}
+
 function normalizeStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -425,6 +500,42 @@ function normalizePrice(value: unknown): number | null {
   return Number.isFinite(numericValue) && numericValue >= 0
     ? numericValue
     : null;
+}
+
+function normalizeDiscountPercentage(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const numericValue =
+    typeof value === "number" ? value : Number(String(value).trim());
+
+  return Number.isFinite(numericValue) && numericValue > 0 && numericValue <= 50
+    ? numericValue
+    : null;
+}
+
+function normalizeOffer(value: unknown): ProductOffer | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const offerValue = value as {
+    enabled?: unknown;
+    discountPercentage?: unknown;
+  };
+  const discountPercentage = normalizeDiscountPercentage(
+    offerValue.discountPercentage
+  );
+
+  if (offerValue.enabled !== true || discountPercentage === null) {
+    return null;
+  }
+
+  return {
+    enabled: true,
+    discountPercentage,
+  };
 }
 
 function isLegacyCategory(value: string | null | undefined): value is LegacyCategory {
@@ -500,6 +611,18 @@ function normalizeCategory(rawCategory: string | null | undefined, product: RawP
     return rawCategory;
   }
 
+  if (hasCategorySignal([rawCategory, product.categoryName], OFFER_CATEGORY_SIGNALS)) {
+    return "offers-discounts-up-to-50";
+  }
+
+  if (hasCategorySignal([rawCategory, product.categoryName], MILK_CATEGORY_SIGNALS)) {
+    return "milk";
+  }
+
+  if (hasCategorySignal([rawCategory, product.categoryName], OTHER_CATEGORY_SIGNALS)) {
+    return "others";
+  }
+
   const searchText = buildProductSearchText(product);
   const hormoneSearchText = buildHormoneSearchText(product);
 
@@ -562,15 +685,7 @@ function normalizeCategory(rawCategory: string | null | undefined, product: RawP
 
         return "antibiotics";
       case "miscellaneous":
-        if (hasAnyKeyword(searchText, POULTRY_KEYWORDS)) {
-          return "poultry-medicines";
-        }
-
-        if (isPetOrBirdFocused(searchText)) {
-          return "pets-birds";
-        }
-
-        return "veterinary-equipment";
+        return "others";
     }
   }
 
@@ -588,7 +703,7 @@ function normalizeCategory(rawCategory: string | null | undefined, product: RawP
     return "pets-birds";
   }
 
-  return "antibiotics";
+  return "others";
 }
 
 function buildFallbackSlug(name: string, id: string) {
@@ -607,6 +722,7 @@ export function normalizeProduct(product: RawProduct): Product {
     category,
     categoryName: CATEGORY_LABELS[category],
     price: normalizePrice(product.price),
+    offer: normalizeOffer(product.offer),
     form: normalizeText(product.form),
     variants: normalizeStringArray(product.variants),
     manufacturer: String(product.manufacturer ?? "").trim(),
@@ -649,6 +765,39 @@ export function getNumericProductPrice(
   return price;
 }
 
+export function getProductDiscountPercentage(product: Product): number | null {
+  if (!product.offer?.enabled) {
+    return null;
+  }
+
+  return normalizeDiscountPercentage(product.offer.discountPercentage);
+}
+
+export function isProductInOffers(product: Product): boolean {
+  return product.category === OFFERS_CATEGORY || getProductDiscountPercentage(product) !== null;
+}
+
+export function isProductInCategory(product: Product, category: Category): boolean {
+  return category === OFFERS_CATEGORY
+    ? isProductInOffers(product)
+    : product.category === category;
+}
+
+export function getDiscountedProductPrice(product: Product): number | null {
+  const numericPrice = getNumericProductPrice(product.price);
+  const discountPercentage = getProductDiscountPercentage(product);
+
+  if (numericPrice === null) {
+    return null;
+  }
+
+  if (discountPercentage === null) {
+    return numericPrice;
+  }
+
+  return Number((numericPrice * (1 - discountPercentage / 100)).toFixed(2));
+}
+
 export function formatProductPrice(price: number | null | undefined): string {
   const numericPrice = getNumericProductPrice(price);
 
@@ -660,7 +809,7 @@ export function formatProductPrice(price: number | null | undefined): string {
 }
 
 export function getCartLinePrice(item: CartItem): number | null {
-  const unitPrice = getNumericProductPrice(item.product.price);
+  const unitPrice = getDiscountedProductPrice(item.product);
 
   if (unitPrice === null) {
     return null;

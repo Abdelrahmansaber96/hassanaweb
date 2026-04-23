@@ -3,6 +3,8 @@ export interface WhatsAppContact {
   number: string;
 }
 
+const DEFAULT_SITE_URL = "https://www.hassana-ksa.com";
+
 function normalizePhoneNumber(value: string) {
   return value.replace(/\D/g, "");
 }
@@ -99,17 +101,23 @@ export const siteConfig = {
 } as const;
 
 export function getConfiguredSiteUrl() {
-  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const candidates = [process.env.NEXT_PUBLIC_SITE_URL, DEFAULT_SITE_URL];
 
-  if (!configuredUrl) {
-    return undefined;
+  for (const candidate of candidates) {
+    const configuredUrl = candidate?.trim();
+
+    if (!configuredUrl) {
+      continue;
+    }
+
+    try {
+      return new URL(configuredUrl);
+    } catch {
+      continue;
+    }
   }
 
-  try {
-    return new URL(configuredUrl);
-  } catch {
-    return undefined;
-  }
+  return undefined;
 }
 
 export function getWhatsAppUrl(message?: string) {

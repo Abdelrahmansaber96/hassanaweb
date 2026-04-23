@@ -125,17 +125,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const syncedItems = currentItems.map((item) => {
           const latestProduct = productsById.get(item.product.id);
 
-          if (!latestProduct || latestProduct.price === item.product.price) {
+          if (!latestProduct) {
+            return item;
+          }
+
+          if (JSON.stringify(latestProduct) === JSON.stringify(item.product)) {
             return item;
           }
 
           hasPriceChanges = true;
           return {
             ...item,
-            product: {
-              ...item.product,
-              price: latestProduct.price,
-            },
+            product: latestProduct,
           };
         });
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/mongodb";
-import { CATEGORY_LABELS, products as seedProducts } from "@/lib/products";
+import { CATEGORY_LABELS, isProductInCategory, products as seedProducts, type Category } from "@/lib/products";
 
 export async function POST(request: NextRequest) {
   // Protect with the dashboard secret to prevent public access
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const catCol = db.collection("categories");
     await catCol.deleteMany({});
     const categories = Object.entries(CATEGORY_LABELS).map(([id, name]) => {
-      const count = seedProducts.filter((product) => product.category === id).length;
+      const count = seedProducts.filter((product) => isProductInCategory(product, id as Category)).length;
       return { id, name, productCount: count };
     });
     if (categories.length > 0) {

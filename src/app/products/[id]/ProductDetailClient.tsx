@@ -10,10 +10,12 @@ import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
 import {
   CATEGORY_DETAIL_PLACEHOLDER_GRADIENTS,
   CATEGORY_ICONS,
-  getNumericProductPrice,
+  getDiscountedProductPrice,
   getProductWhatsAppMessage,
   formatProductPrice,
   CATEGORY_LABELS,
+  getNumericProductPrice,
+  getProductDiscountPercentage,
   isRemoteImageUrl,
   type Product,
 } from "@/lib/products";
@@ -35,7 +37,14 @@ export default function ProductDetailClient({ product, related }: Props) {
   const activeImage = hasImages ? product.images[activeImg] : null;
   const canRenderActiveImage = Boolean(activeImage) && !failedImages.includes(activeImg);
   const activeImageIsRemote = isRemoteImageUrl(activeImage);
-  const unitPrice = getNumericProductPrice(product.price);
+  const baseUnitPrice = getNumericProductPrice(product.price);
+  const unitPrice = getDiscountedProductPrice(product);
+  const discountPercentage = getProductDiscountPercentage(product);
+  const hasDiscount =
+    baseUnitPrice !== null &&
+    unitPrice !== null &&
+    discountPercentage !== null &&
+    unitPrice < baseUnitPrice;
   const currentSelectionTotal = unitPrice === null ? null : unitPrice * qty;
 
   return (
@@ -132,6 +141,11 @@ export default function ProductDetailClient({ product, related }: Props) {
                   {CATEGORY_ICONS[product.category] || "📦"}{" "}
                   {CATEGORY_LABELS[product.category] || product.categoryName}
                 </span>
+                {hasDiscount && (
+                  <span className="px-3 py-1.5 rounded-full bg-red-50 text-red-600 text-xs font-semibold">
+                    🏷️ خصم {discountPercentage}%
+                  </span>
+                )}
                 {product.form && (
                   <span className="px-3 py-1.5 rounded-full bg-[#2d8a56]/10 text-[#2d8a56] text-xs font-semibold">
                     💊 {product.form}
@@ -146,13 +160,20 @@ export default function ProductDetailClient({ product, related }: Props) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-3xl border border-[#dbe6df] bg-white px-5 py-4 shadow-sm">
                   <p className="text-[11px] font-bold tracking-wide text-gray-400">سعر الوحدة</p>
-                  <p className="mt-2 text-2xl font-black text-[#1a5c3a] sm:text-3xl">
-                    {formatProductPrice(product.price)}
+                  <p className={`mt-2 text-2xl font-black sm:text-3xl ${hasDiscount ? "text-[#d0671c]" : "text-[#1a5c3a]"}`}>
+                    {formatProductPrice(unitPrice)}
                   </p>
+                  {hasDiscount && (
+                    <p className="mt-1 text-sm font-bold text-gray-400 line-through">
+                      {formatProductPrice(baseUnitPrice)}
+                    </p>
+                  )}
                   <p className="mt-1 text-xs text-gray-500">
                     {unitPrice === null
                       ? "يتم تأكيد السعر النهائي عند التواصل أو إتمام الطلب."
-                      : "السعر المعروض لكل عبوة أو وحدة من المنتج."}
+                      : hasDiscount
+                        ? `تم تطبيق خصم ${discountPercentage}% على سعر المنتج الحالي.`
+                        : "السعر المعروض لكل عبوة أو وحدة من المنتج."}
                   </p>
                 </div>
 

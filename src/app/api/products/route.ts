@@ -23,6 +23,56 @@ function parsePriceInput(value: unknown) {
   return { valid: true, price: normalizedValue };
 }
 
+function parseDiscountPercentageInput(value: unknown) {
+  if (value === "" || value === null || value === undefined) {
+    return { valid: true, discountPercentage: null as number | null };
+  }
+
+  const normalizedValue =
+    typeof value === "number" ? value : Number(String(value).trim());
+
+  if (!Number.isFinite(normalizedValue) || normalizedValue <= 0 || normalizedValue > 50) {
+    return { valid: false, discountPercentage: null as number | null };
+  }
+
+  return { valid: true, discountPercentage: normalizedValue };
+}
+
+function parseOfferInput(value: unknown) {
+  if (value === null || value === undefined) {
+    return { valid: true, offer: null as Product["offer"] };
+  }
+
+  if (typeof value !== "object") {
+    return { valid: false, offer: null as Product["offer"] };
+  }
+
+  const offerValue = value as {
+    enabled?: unknown;
+    discountPercentage?: unknown;
+  };
+
+  if (offerValue.enabled !== true) {
+    return { valid: true, offer: null as Product["offer"] };
+  }
+
+  const parsedDiscountPercentage = parseDiscountPercentageInput(
+    offerValue.discountPercentage
+  );
+
+  if (!parsedDiscountPercentage.valid || parsedDiscountPercentage.discountPercentage === null) {
+    return { valid: false, offer: null as Product["offer"] };
+  }
+
+  return {
+    valid: true,
+    offer: {
+      enabled: true,
+      discountPercentage: parsedDiscountPercentage.discountPercentage,
+    } satisfies NonNullable<Product["offer"]>,
+  };
+}
+
 function parseOptionalText(value: unknown): string | null {
   if (typeof value !== "string") {
     return null;
@@ -78,6 +128,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsedPrice = parsePriceInput(body.price);
+    const parsedOffer = parseOfferInput(body.offer);
     const name = String(body.name ?? "").trim();
     const category: unknown = body.category;
 
@@ -102,6 +153,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!parsedOffer.valid) {
+      return NextResponse.json(
+        { error: "نسبة الخصم يجب أن تكون بين 1 و50" },
+        { status: 400 }
+      );
+    }
+
     const newProduct: Product = {
       id: body.id || Date.now().toString(),
       name,
@@ -109,6 +167,7 @@ export async function POST(request: NextRequest) {
       category,
       categoryName: CATEGORY_LABELS[category],
       price: parsedPrice.price,
+      offer: parsedOffer.offer,
       form: parseOptionalText(body.form),
       variants: parseStringArray(body.variants),
       manufacturer: String(body.manufacturer ?? "").trim(),

@@ -38,6 +38,14 @@ BLOB_READ_WRITE_TOKEN=...
 4. إذا كنت تحتاج رفع صور من لوحة التحكم، فعّل Vercel Blob وخذ `BLOB_READ_WRITE_TOKEN`.
 5. نفّذ أول Seed بعد النشر إذا كانت قاعدة البيانات فارغة.
 
+### Sitemap و Robots
+
+بعد تشغيل `npm run build` سيتم توليد `sitemap.xml` و `robots.txt` تلقائيًا بواسطة `next-sitemap`.
+
+- الرابط الرئيسي الذي ترفعه في Google Search Console هو: `/sitemap.xml`
+- الدومين الافتراضي الحالي للإنتاج هو: `https://www.hassana-ksa.com`
+- إذا احتجت تغييره لاحقًا، استخدم `NEXT_PUBLIC_SITE_URL` قبل الـ production build
+
 ### ملاحظات مهمة
 
 1. لو لم تضف `BLOB_READ_WRITE_TOKEN` على Vercel، رفع الصور من `/api/upload` سيرجع رسالة خطأ واضحة بدل نجاح وهمي.

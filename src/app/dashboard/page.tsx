@@ -11,6 +11,11 @@ import {
   CATEGORY_OPTIONS,
   CATEGORY_LABELS as LABELS,
   formatProductPrice,
+  getDiscountedProductPrice,
+  getNumericProductPrice,
+  getProductDiscountPercentage,
+  isProductInCategory,
+  isProductInOffers,
   isRemoteImageUrl,
 } from "@/lib/products";
 
@@ -23,6 +28,8 @@ const emptyForm = {
   variants: "",
   imageUrl: "",
   price: "",
+  offerEnabled: false,
+  discountPercentage: "",
   inStock: true,
 };
 
@@ -38,6 +45,9 @@ function getFormStateFromProduct(product: Product): FormState {
     variants: product.variants.join(", "),
     imageUrl: product.images[0] ?? "",
     price: typeof product.price === "number" ? String(product.price) : "",
+    offerEnabled: product.offer?.enabled === true,
+    discountPercentage:
+      product.offer?.enabled === true ? String(product.offer.discountPercentage) : "",
     inStock: product.inStock !== false,
   };
 }
@@ -66,6 +76,12 @@ function buildProductPayload(form: FormState) {
     variants: parseVariantsInput(form.variants),
     images: imageUrl === "" ? [] : [imageUrl],
     price: form.price === "" ? null : Number(form.price),
+    offer: form.offerEnabled
+      ? {
+          enabled: true,
+          discountPercentage: Number(form.discountPercentage.trim()),
+        }
+      : null,
     inStock: form.inStock,
   };
 }
@@ -192,6 +208,29 @@ export default function DashboardPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+
+    if (form.offerEnabled) {
+      const parsedPrice = Number(form.price.trim());
+      const parsedDiscountPercentage = Number(form.discountPercentage.trim());
+
+      if (form.price.trim() === "" || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        showToast("حدد سعر المنتج أولًا قبل تفعيل الخصم", "error");
+        setSubmitting(false);
+        return;
+      }
+
+      if (
+        form.discountPercentage.trim() === "" ||
+        !Number.isFinite(parsedDiscountPercentage) ||
+        parsedDiscountPercentage <= 0 ||
+        parsedDiscountPercentage > 50
+      ) {
+        showToast("نسبة الخصم يجب أن تكون بين 1 و50", "error");
+        setSubmitting(false);
+        return;
+      }
+    }
+
     try {
       const body = buildProductPayload(form);
       const endpoint = isEditing
@@ -282,7 +321,7 @@ export default function DashboardPage() {
       search === "" ||
       p.name.includes(search) ||
       p.manufacturer.includes(search);
-    const matchCat = filterCat === "all" || p.category === filterCat;
+    const matchCat = filterCat === "all" || isProductInCategory(p, filterCat);
     return matchSearch && matchCat;
   });
 
@@ -296,7 +335,7 @@ export default function DashboardPage() {
     category: option.value,
     label: option.label,
     icon: option.icon,
-    count: products.filter((product) => product.category === option.value).length,
+    count: products.filter((product) => isProductInCategory(product, option.value)).length,
   }))
     .filter((option) => option.count > 0)
     .slice(0, 4);
@@ -579,6 +618,82 @@ export default function DashboardPage() {
                   />
                 </div>
 
+                <div className="rounded-2xl border border-[#f4d8c5] bg-[#fff7f1] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-sm font-bold text-[#1a1a2e]">عروض وخصومات</h3>
+                      <p className="mt-1 text-xs leading-6 text-gray-500">
+                        أضف المنتج إلى قسم العروض مع الاحتفاظ بتصنيفه الأساسي، وحدد نسبة الخصم التي تريدها.
+                      </p>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <div
+                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                          form.offerEnabled ? "bg-[#d0671c] border-[#d0671c]" : "border-gray-300"
+                        }`}
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            offerEnabled: !current.offerEnabled,
+                            discountPercentage: !current.offerEnabled
+                              ? current.discountPercentage
+                              : "",
+                          }))
+                        }
+                      >
+                        {form.offerEnabled && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">🏷️ تفعيل العرض على هذا المنتج</span>
+                    </label>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                        نسبة الخصم %
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="50"
+                        step="1"
+                        disabled={!form.offerEnabled}
+                        value={form.discountPercentage}
+                        onChange={(e) =>
+                          setForm((current) => ({
+                            ...current,
+                            discountPercentage: e.target.value,
+                          }))
+                        }
+                        placeholder="مثال: 20"
+                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#d0671c] transition-colors disabled:bg-gray-100 disabled:text-gray-400"
+                      />
+                    </div>
+
+                    <div className="rounded-2xl border border-white/70 bg-white/70 px-4 py-3">
+                      <p className="text-[11px] font-bold tracking-wide text-gray-400">السعر بعد الخصم</p>
+                      <p className="mt-2 text-lg font-black text-[#d0671c]">
+                        {form.offerEnabled &&
+                        form.price.trim() !== "" &&
+                        form.discountPercentage.trim() !== "" &&
+                        Number.isFinite(Number(form.price)) &&
+                        Number.isFinite(Number(form.discountPercentage))
+                          ? formatProductPrice(
+                              Number(form.price) * (1 - Number(form.discountPercentage) / 100)
+                            )
+                          : "أضف السعر ونسبة الخصم"}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        يمكنك تحديد خصم من 1% إلى 50%، وسيظهر المنتج تلقائيًا داخل قسم العروض.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Checkbox */}
                 <div className="flex flex-wrap gap-4 pt-1">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -825,9 +940,16 @@ export default function DashboardPage() {
 
                         {/* Category */}
                         <td className="px-5 py-4">
-                          <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium whitespace-nowrap">
-                            {LABELS[product.category] || product.category}
-                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium whitespace-nowrap">
+                              {LABELS[product.category] || product.category}
+                            </span>
+                            {isProductInOffers(product) && (
+                              <span className="px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold whitespace-nowrap">
+                                🏷️ عرض {getProductDiscountPercentage(product) ? `${getProductDiscountPercentage(product)}%` : ""}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         <td className="px-5 py-4 min-w-[220px]">
@@ -855,9 +977,35 @@ export default function DashboardPage() {
                               {savingPriceId === product.id ? "جارٍ الحفظ" : "حفظ"}
                             </button>
                           </div>
-                          <p className="mt-2 text-xs font-semibold text-[#1a5c3a]">
-                            {formatProductPrice(product.price)}
-                          </p>
+                          {(() => {
+                            const basePrice = getNumericProductPrice(product.price);
+                            const discountedPrice = getDiscountedProductPrice(product);
+                            const discountPercentage = getProductDiscountPercentage(product);
+                            const hasDiscount =
+                              basePrice !== null &&
+                              discountedPrice !== null &&
+                              discountPercentage !== null &&
+                              discountedPrice < basePrice;
+
+                            if (hasDiscount) {
+                              return (
+                                <div className="mt-2 space-y-1">
+                                  <p className="text-[11px] font-bold text-gray-400 line-through">
+                                    {formatProductPrice(basePrice)}
+                                  </p>
+                                  <p className="text-xs font-bold text-[#d0671c]">
+                                    بعد الخصم: {formatProductPrice(discountedPrice)}
+                                  </p>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <p className="mt-2 text-xs font-semibold text-[#1a5c3a]">
+                                {formatProductPrice(product.price)}
+                              </p>
+                            );
+                          })()}
                         </td>
 
                         {/* Stock */}

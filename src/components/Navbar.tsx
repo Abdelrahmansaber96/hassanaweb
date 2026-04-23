@@ -14,6 +14,13 @@ const navLinks = [
   { href: "/products", label: "جميع المنتجات" },
 ];
 
+const marqueeMessages = [
+  "📢 ترقبوا تحديثات باستمرار فيما يخص الأدوية والأسعار",
+  "💊 أسعار ومخزون المنتجات يتم تحديثهما أولًا بأول",
+];
+
+const marqueeText = [...marqueeMessages, ...marqueeMessages].join(" \u00A0\u00A0\u2726\u00A0\u00A0 ");
+
 const categoryLinks = CATEGORY_OPTIONS.map((category) => ({
   href: `/products?category=${category.value}`,
   label: category.label,
@@ -117,9 +124,9 @@ export default function Navbar() {
   return (
     <>
       {/* Top bar - promotional marquee */}
-      <div className="bg-[#1a5c3a] text-white text-xs py-2 overflow-hidden">
+      <div className="bg-[#1a5c3a] text-white text-sm font-semibold py-3 overflow-hidden">
         <div className="animate-marquee whitespace-nowrap">
-          🐑 حصانة فيت — صيدلية بيطرية متخصصة في منتجات الأغنام والإبل &nbsp;&nbsp;🐪&nbsp;&nbsp; توصيل سريع لجميع مناطق المملكة &nbsp;&nbsp;💊&nbsp;&nbsp; أدوية وتطعيمات معتمدة بيطرياً &nbsp;&nbsp;📞&nbsp;&nbsp; تواصل معنا عبر واتساب &nbsp;&nbsp;🌿&nbsp;&nbsp; استشارات بيطرية مجانية
+          {marqueeText}
         </div>
       </div>
 

@@ -8,6 +8,9 @@ import {
   formatProductPrice,
   getCartLinePrice,
   getCartPricingSummary,
+  getDiscountedProductPrice,
+  getNumericProductPrice,
+  getProductDiscountPercentage,
   getCartWhatsAppMessage,
 } from "@/lib/products";
 import { useEffect } from "react";
@@ -102,7 +105,17 @@ export default function CartDrawer() {
                     </Link>
                   </motion.div>
                 ) : (
-                  items.map((item) => (
+                  items.map((item) => {
+                    const baseUnitPrice = getNumericProductPrice(item.product.price);
+                    const discountedUnitPrice = getDiscountedProductPrice(item.product);
+                    const discountPercentage = getProductDiscountPercentage(item.product);
+                    const hasDiscount =
+                      baseUnitPrice !== null &&
+                      discountedUnitPrice !== null &&
+                      discountPercentage !== null &&
+                      discountedUnitPrice < baseUnitPrice;
+
+                    return (
                     <motion.div
                       key={item.product.id}
                       layout
@@ -131,8 +144,13 @@ export default function CartDrawer() {
                         </p>
                         <div className="mt-2 space-y-1 text-xs">
                           <p className="font-semibold text-[#1a1a2e]">
-                            سعر الوحدة: <span className="text-[#1a5c3a]">{formatProductPrice(item.product.price)}</span>
+                            سعر الوحدة: <span className={`${hasDiscount ? "text-[#d0671c]" : "text-[#1a5c3a]"}`}>{formatProductPrice(discountedUnitPrice)}</span>
                           </p>
+                          {hasDiscount && (
+                            <p className="text-gray-400 line-through">
+                              قبل الخصم: {formatProductPrice(baseUnitPrice)}
+                            </p>
+                          )}
                           <p className="text-gray-500">
                             إجمالي الصنف: <span className="font-bold text-[#1a1a2e]">{formatProductPrice(getCartLinePrice(item))}</span>
                           </p>
@@ -170,7 +188,8 @@ export default function CartDrawer() {
                         </svg>
                       </button>
                     </motion.div>
-                  ))
+                  );
+                  })
                 )}
               </AnimatePresence>
             </div>

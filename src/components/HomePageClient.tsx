@@ -30,13 +30,17 @@ interface HomePageClientProps {
     category: Category;
     count: number;
   }>;
+  offerProducts: Product[];
   showcaseProducts: Product[];
   moreProducts: Product[];
 }
 
+const offersCategory: Category = "offers-discounts-up-to-50";
+
 export default function HomePageClient({
   productCount,
   categoryCounts,
+  offerProducts,
   showcaseProducts,
   moreProducts,
 }: HomePageClientProps) {
@@ -186,14 +190,16 @@ export default function HomePageClient({
             </h2>
           </FadeIn>
 
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <StaggerContainer className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {categoryCounts.map(({ category, count }) => (
               <StaggerItem key={category}>
                 <Link href={`/products?category=${category}`} className={`relative block rounded-2xl overflow-hidden bg-gradient-to-br ${CATEGORY_HOME_GRADIENTS[category] || "from-gray-600 to-gray-400"} group`}>
-                  <div className="relative p-8 flex flex-col items-center text-white text-center gap-3">
-                    <span className="text-5xl group-hover:scale-110 transition-transform duration-300">{CATEGORY_ICONS[category] || "📦"}</span>
-                    <h3 className="text-lg font-bold">{CATEGORY_LABELS[category]}</h3>
-                    <p className="text-white/70 text-xs leading-relaxed">{count} منتج</p>
+                  <div className="relative flex min-h-[10.5rem] flex-col items-center gap-2 p-5 text-center text-white sm:min-h-[11rem] sm:p-6">
+                    <span className="text-4xl transition-transform duration-300 group-hover:scale-110 sm:text-[2.65rem]">{CATEGORY_ICONS[category] || "📦"}</span>
+                    <h3 className="text-sm font-bold leading-6 sm:text-base">{CATEGORY_LABELS[category]}</h3>
+                    <p className="text-[11px] leading-relaxed text-white/72 sm:text-xs">
+                      {count > 0 ? `${count} منتج` : "سيضاف قريبًا"}
+                    </p>
                     <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-white/80 group-hover:text-white transition-colors">
                       تصفح المنتجات
                       <svg className="w-3.5 h-3.5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,6 +211,65 @@ export default function HomePageClient({
               </StaggerItem>
             ))}
           </StaggerContainer>
+        </div>
+      </section>
+
+      <section className="bg-[linear-gradient(135deg,#fff3ea_0%,#fff8ef_48%,#fff1dd_100%)] py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FadeIn className="mb-8 flex items-end justify-between gap-4">
+            <div>
+              <p className="mb-1 text-xs font-black uppercase tracking-[0.28em] text-[#d0671c]">عروض خاصة</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a2e]">{CATEGORY_LABELS[offersCategory]}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-[#6c5847]">
+                خصومات موسمية مختارة على منتجات بيطرية جاهزة للطلب المباشر.
+              </p>
+            </div>
+            <Link
+              href={`/products?category=${offersCategory}`}
+              className="hidden sm:inline-flex items-center gap-2 rounded-2xl border border-[#d0671c]/20 bg-white/70 px-4 py-2 text-sm font-bold text-[#b55312] transition-colors hover:bg-white"
+            >
+              مشاهدة كل العروض
+              <svg className="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </FadeIn>
+
+          {offerProducts.length > 0 ? (
+            <div className="flex items-stretch gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4">
+              {offerProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.06, duration: 0.4 }}
+                  className="h-full flex-none w-[250px]"
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <FadeIn>
+              <div className="rounded-[28px] border border-[#f2d2bd] bg-white/90 px-6 py-8 text-center shadow-[0_18px_40px_rgba(150,86,28,0.08)]">
+                <span className="text-4xl">🏷️</span>
+                <h3 className="mt-3 text-xl font-extrabold text-[#1a1a2e]">سيتم إضافة العروض قريبًا</h3>
+                <p className="mt-2 text-sm leading-7 text-[#6c5847]">
+                  جهّزنا القسم الآن، وأول المنتجات التي ستُضاف إلى تصنيف العروض ستظهر هنا مباشرة.
+                </p>
+                <Link
+                  href="/products"
+                  className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#d0671c] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#b55312]"
+                >
+                  تصفح جميع المنتجات
+                  <svg className="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </FadeIn>
+          )}
         </div>
       </section>
 

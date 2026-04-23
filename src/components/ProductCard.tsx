@@ -10,6 +10,9 @@ import {
   CATEGORY_ICONS,
   CATEGORY_LABELS,
   formatProductPrice,
+  getDiscountedProductPrice,
+  getNumericProductPrice,
+  getProductDiscountPercentage,
   isRemoteImageUrl,
   type Product,
 } from "@/lib/products";
@@ -41,6 +44,14 @@ export default function ProductCard({ product }: ProductCardProps) {
     product.variants?.[0] ||
     product.active_ingredients?.[0]?.concentration ||
     "—";
+  const basePrice = getNumericProductPrice(product.price);
+  const discountedPrice = getDiscountedProductPrice(product);
+  const discountPercentage = getProductDiscountPercentage(product);
+  const hasDiscount =
+    basePrice !== null &&
+    discountedPrice !== null &&
+    discountPercentage !== null &&
+    discountedPrice < basePrice;
 
   return (
     <motion.div
@@ -109,6 +120,14 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
+        {hasDiscount && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-[11px] font-bold text-red-600">
+              🏷️ خصم {discountPercentage}%
+            </span>
+          </div>
+        )}
+
         <div className="mt-3 grid min-h-[4.5rem] grid-cols-2 gap-2">
           <div className="rounded-2xl bg-[#f5f8f6] px-3 py-2">
             <p className="text-[10px] font-bold text-gray-400">الشكل الدوائي</p>
@@ -166,10 +185,17 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           <div className="flex items-center justify-center rounded-2xl border border-[#e0ebe3] bg-[#f8fbf9] px-3 py-3 text-center">
             <div>
-              <p className="text-[10px] font-bold text-gray-400">السعر</p>
-              <p className="mt-1 text-sm font-extrabold text-[#1a5c3a]">
-                {formatProductPrice(product.price)}
+              <p className="text-[10px] font-bold text-gray-400">
+                {hasDiscount ? "السعر بعد الخصم" : "السعر"}
               </p>
+              <p className={`mt-1 text-sm font-extrabold ${hasDiscount ? "text-[#d0671c]" : "text-[#1a5c3a]"}`}>
+                {formatProductPrice(hasDiscount ? discountedPrice : product.price)}
+              </p>
+              {hasDiscount && (
+                <p className="mt-1 text-[11px] font-bold text-gray-400 line-through">
+                  {formatProductPrice(basePrice)}
+                </p>
+              )}
             </div>
           </div>
         </div>
