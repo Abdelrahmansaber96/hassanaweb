@@ -1,6 +1,8 @@
 ﻿import seedData from "@/data/products.json";
 import { getWhatsAppUrl, siteConfig } from "@/lib/site";
 
+const VITAMINS_MINERALS_CATEGORY_ID = "vitamins-minerals";
+
 const CATEGORY_DEFINITIONS = [
   {
     id: "antibiotics",
@@ -57,22 +59,13 @@ const CATEGORY_DEFINITIONS = [
     homeGradient: "from-fuchsia-600 to-rose-500",
   },
   {
-    id: "injectable-vitamins-minerals",
-    label: "فيتامينات ومعادن ",
+    id: VITAMINS_MINERALS_CATEGORY_ID,
+    label: "فيتامينات ومعادن",
     icon: "🧬",
     badgeClass: "bg-emerald-100 text-emerald-700",
     cardPlaceholderGradient: "from-emerald-50 to-teal-100",
     detailPlaceholderGradient: "from-emerald-100 to-teal-200",
     homeGradient: "from-emerald-600 to-teal-500",
-  },
-  {
-    id: "oral-vitamins-minerals",
-    label: "فيتامينات ومعادن ",
-    icon: "🌿",
-    badgeClass: "bg-lime-100 text-lime-700",
-    cardPlaceholderGradient: "from-lime-50 to-green-100",
-    detailPlaceholderGradient: "from-lime-100 to-green-200",
-    homeGradient: "from-lime-600 to-emerald-500",
   },
   {
     id: "milk",
@@ -415,14 +408,6 @@ const FATTENING_KEYWORDS = [
   "polyphagia",
 ];
 
-const INJECTION_KEYWORDS = [
-  "للحقن",
-  "محلول للحقن",
-  "معلق للحقن",
-  "مستحلب للحقن",
-  "injection",
-];
-
 const VITAMIN_KEYWORDS = [
   "فيتامين",
   "vitamin",
@@ -607,6 +592,13 @@ function isPetOrBirdFocused(text: string) {
 }
 
 function normalizeCategory(rawCategory: string | null | undefined, product: RawProduct): Category {
+  if (
+    rawCategory === "injectable-vitamins-minerals" ||
+    rawCategory === "oral-vitamins-minerals"
+  ) {
+    return VITAMINS_MINERALS_CATEGORY_ID;
+  }
+
   if (isCategory(rawCategory)) {
     return rawCategory;
   }
@@ -663,17 +655,13 @@ function normalizeCategory(rawCategory: string | null | undefined, product: RawP
           ? "poultry-medicines"
           : "blood-parasites-heyam";
       case "vitamins-minerals-amino-acids":
-        return hasAnyKeyword(searchText, INJECTION_KEYWORDS)
-          ? "injectable-vitamins-minerals"
-          : "oral-vitamins-minerals";
+        return VITAMINS_MINERALS_CATEGORY_ID;
       case "feed-products":
         if (hasAnyKeyword(searchText, FATTENING_KEYWORDS)) {
           return "fattening-bone-growth";
         }
 
-        return hasAnyKeyword(searchText, INJECTION_KEYWORDS)
-          ? "injectable-vitamins-minerals"
-          : "oral-vitamins-minerals";
+        return VITAMINS_MINERALS_CATEGORY_ID;
       case "antibacterials":
         if (isPoultryFocused(searchText)) {
           return "poultry-medicines";
@@ -690,9 +678,7 @@ function normalizeCategory(rawCategory: string | null | undefined, product: RawP
   }
 
   if (hasAnyKeyword(searchText, VITAMIN_KEYWORDS)) {
-    return hasAnyKeyword(searchText, INJECTION_KEYWORDS)
-      ? "injectable-vitamins-minerals"
-      : "oral-vitamins-minerals";
+    return VITAMINS_MINERALS_CATEGORY_ID;
   }
 
   if (isPoultryFocused(searchText)) {
