@@ -64,6 +64,28 @@ function normalizeDate(value) {
   return Number.isNaN(parsedDate.getTime()) ? undefined : parsedDate.toISOString();
 }
 
+function buildFallbackSlug(name, id) {
+  return String(name || id || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+function buildProductPath(product) {
+  const productId = typeof product?.id === "string" ? product.id.trim() : "";
+
+  if (!productId) {
+    return null;
+  }
+
+  const rawSlug = typeof product?.slug === "string" ? product.slug.trim() : "";
+  const productName = typeof product?.name === "string" ? product.name.trim() : "";
+  const slug = rawSlug || buildFallbackSlug(productName, productId);
+  const routeSegment = slug && slug !== productId ? `${slug}-${productId}` : slug || productId;
+
+  return `/products/${encodeURIComponent(routeSegment)}`;
+}
+
 async function readStaticProducts() {
   const filePath = path.join(process.cwd(), "src", "data", "products.json");
   const fileContent = await fs.readFile(filePath, "utf8");
@@ -85,7 +107,7 @@ async function readMongoProducts() {
     return await client
       .db(DB_NAME)
       .collection(COLLECTION)
-      .find({}, { projection: { _id: 0, id: 1, createdAt: 1, updatedAt: 1 } })
+      .find({}, { projection: { _id: 0, id: 1, slug: 1, name: 1, createdAt: 1, updatedAt: 1 } })
       .toArray();
   } catch {
     return [];
@@ -170,13 +192,11 @@ module.exports = {
     });
 
     const productEntries = products.flatMap((product) => {
-      const productId = typeof product?.id === "string" ? product.id.trim() : "";
+      const loc = buildProductPath(product);
 
-      if (!productId) {
+      if (!loc) {
         return [];
       }
-
-      const loc = `/products/${encodeURIComponent(productId)}`;
 
       if (seenPaths.has(loc)) {
         return [];

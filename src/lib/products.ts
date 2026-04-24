@@ -696,6 +696,19 @@ function buildFallbackSlug(name: string, id: string) {
   return (name || id).toLowerCase().trim().replace(/\s+/g, "-");
 }
 
+function decodeProductRouteParam(value: string) {
+  try {
+    return decodeURIComponent(value).trim();
+  } catch {
+    return value.trim();
+  }
+}
+
+function extractTrailingNumericId(routeParam: string) {
+  const match = routeParam.match(/-(\d+)$/);
+  return match?.[1] ?? null;
+}
+
 export function normalizeProduct(product: RawProduct): Product {
   const id = String(product.id ?? product.slug ?? product.name ?? "").trim();
   const name = String(product.name ?? "").trim();
@@ -725,6 +738,54 @@ export function normalizeProduct(product: RawProduct): Product {
 
 export function normalizeProducts(items: RawProduct[]): Product[] {
   return items.map(normalizeProduct);
+}
+
+export function getProductRouteSegment(
+  product: Pick<Product, "id" | "slug" | "name">
+) {
+  const id = String(product.id ?? "").trim();
+  const slug = String(product.slug ?? "").trim() || buildFallbackSlug(product.name, id);
+
+  if (!slug) {
+    return id;
+  }
+
+  if (!id || slug === id) {
+    return slug;
+  }
+
+  return `${slug}-${id}`;
+}
+
+export function getProductPath(product: Pick<Product, "id" | "slug" | "name">) {
+  return `/products/${encodeURIComponent(getProductRouteSegment(product))}`;
+}
+
+export function findProductByRouteParam(products: Product[], routeParam: string) {
+  const normalizedParam = decodeProductRouteParam(routeParam);
+
+  if (!normalizedParam) {
+    return undefined;
+  }
+
+  const directMatch = products.find(
+    (product) =>
+      product.id === normalizedParam ||
+      product.slug === normalizedParam ||
+      getProductRouteSegment(product) === normalizedParam
+  );
+
+  if (directMatch) {
+    return directMatch;
+  }
+
+  const extractedId = extractTrailingNumericId(normalizedParam);
+
+  if (!extractedId) {
+    return undefined;
+  }
+
+  return products.find((product) => product.id === extractedId);
 }
 
 export const WHATSAPP_NUMBER = siteConfig.contact.whatsappNumber;

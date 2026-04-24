@@ -11,6 +11,7 @@ import {
   getCartPricingSummary,
   getDiscountedProductPrice,
   getNumericProductPrice,
+  getProductPath,
   getProductDiscountPercentage,
   getCartWhatsAppMessage,
 } from "@/lib/products";
@@ -101,7 +102,7 @@ export default function CartPage() {
                       >
                         {/* Product visual */}
                         <Link
-                          href={`/products/${item.product.id}`}
+                          href={getProductPath(item.product)}
                           className={`flex-none w-20 h-20 rounded-2xl bg-gradient-to-br ${CATEGORY_DETAIL_PLACEHOLDER_GRADIENTS[item.product.category]} flex items-center justify-center text-3xl hover:scale-105 transition-transform`}
                         >
                           {CATEGORY_ICONS[item.product.category]}
@@ -111,7 +112,7 @@ export default function CartPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <Link
-                              href={`/products/${item.product.id}`}
+                              href={getProductPath(item.product)}
                               className="font-bold text-[#1a1a2e] leading-tight hover:text-[#1a5c3a] transition-colors line-clamp-2"
                             >
                               {item.product.name}

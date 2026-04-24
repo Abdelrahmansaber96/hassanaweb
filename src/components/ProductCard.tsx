@@ -12,6 +12,7 @@ import {
   formatProductPrice,
   getDiscountedProductPrice,
   getNumericProductPrice,
+  getProductPath,
   getProductDiscountPercentage,
   isRemoteImageUrl,
   type Product,
@@ -52,6 +53,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     discountedPrice !== null &&
     discountPercentage !== null &&
     discountedPrice < basePrice;
+  const productPath = getProductPath(product);
 
   return (
     <motion.div
@@ -61,7 +63,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     >
       {/* Image area */}
       <Link
-        href={`/products/${product.id}`}
+        href={productPath}
         className="relative block overflow-hidden border-b border-[#edf3ee]"
       >
         <div
@@ -143,7 +145,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        <Link href={`/products/${product.id}`} className="mt-4 block min-h-[3rem]">
+        <Link href={productPath} className="mt-4 block min-h-[3rem]">
           <h3 className="text-base font-extrabold leading-6 text-[#1a1a2e] transition-colors hover:text-[#1a5c3a] line-clamp-2">
             {product.name}
           </h3>
@@ -176,7 +178,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             </motion.button>
           ) : (
             <Link
-              href={`/products/${product.id}`}
+              href={productPath}
               className="inline-flex items-center justify-center rounded-2xl border border-[#d8e5db] bg-[#f8fbf9] px-3 py-3 text-sm font-bold text-[#365448] transition-colors hover:bg-[#f0f6f2]"
             >
               عرض التفاصيل

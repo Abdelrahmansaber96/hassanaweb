@@ -10,6 +10,7 @@ import {
   getCartPricingSummary,
   getDiscountedProductPrice,
   getNumericProductPrice,
+  getProductPath,
   getProductDiscountPercentage,
   getCartWhatsAppMessage,
 } from "@/lib/products";
@@ -133,7 +134,7 @@ export default function CartDrawer() {
                       {/* Details */}
                       <div className="flex-1 min-w-0">
                         <Link
-                          href={`/products/${item.product.id}`}
+                          href={getProductPath(item.product)}
                           onClick={closeCart}
                           className="font-semibold text-sm text-[#1a1a2e] leading-tight line-clamp-2 hover:text-[#1a5c3a] transition-colors"
                         >

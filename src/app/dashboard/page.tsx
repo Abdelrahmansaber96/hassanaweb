@@ -13,6 +13,7 @@ import {
   formatProductPrice,
   getDiscountedProductPrice,
   getNumericProductPrice,
+  getProductPath,
   getProductDiscountPercentage,
   isProductInCategory,
   isProductInOffers,
@@ -1041,7 +1042,7 @@ export default function DashboardPage() {
                               </svg>
                             </motion.button>
                             <Link
-                              href={`/products/${product.id}`}
+                              href={getProductPath(product)}
                               target="_blank"
                               className="p-2 rounded-xl bg-blue-50 text-[#1a5c3a] hover:bg-blue-100 transition-colors"
                               title="عرض المنتج"
