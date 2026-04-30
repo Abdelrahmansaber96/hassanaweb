@@ -2,6 +2,7 @@
 import { getWhatsAppUrl, siteConfig } from "@/lib/site";
 
 const VITAMINS_MINERALS_CATEGORY_ID = "vitamins-minerals";
+const NEW_ARRIVALS_CATEGORY_ID = "new-arrivals";
 
 const CATEGORY_DEFINITIONS = [
   {
@@ -39,6 +40,15 @@ const CATEGORY_DEFINITIONS = [
     cardPlaceholderGradient: "from-red-50 to-orange-100",
     detailPlaceholderGradient: "from-red-100 to-orange-200",
     homeGradient: "from-red-600 to-orange-500",
+  },
+  {
+    id: NEW_ARRIVALS_CATEGORY_ID,
+    label: "جديدنا",
+    icon: "✨",
+    badgeClass: "bg-indigo-100 text-indigo-700",
+    cardPlaceholderGradient: "from-indigo-50 to-blue-100",
+    detailPlaceholderGradient: "from-indigo-100 to-blue-200",
+    homeGradient: "from-indigo-600 to-sky-500",
   },
   {
     id: "dewormers-mange-parasites",
@@ -361,6 +371,13 @@ const OFFER_CATEGORY_SIGNALS = [
   "عروض وخصومات تصل إلى 50%",
 ] as const;
 
+const NEW_ARRIVALS_CATEGORY_SIGNALS = [
+  NEW_ARRIVALS_CATEGORY_ID,
+  "جديدنا",
+  "new arrivals",
+  "new-arrivals",
+] as const;
+
 const MILK_CATEGORY_SIGNALS = [
   "milk",
   "حليب",
@@ -605,6 +622,10 @@ function normalizeCategory(rawCategory: string | null | undefined, product: RawP
 
   if (hasCategorySignal([rawCategory, product.categoryName], OFFER_CATEGORY_SIGNALS)) {
     return "offers-discounts-up-to-50";
+  }
+
+  if (hasCategorySignal([rawCategory, product.categoryName], NEW_ARRIVALS_CATEGORY_SIGNALS)) {
+    return NEW_ARRIVALS_CATEGORY_ID;
   }
 
   if (hasCategorySignal([rawCategory, product.categoryName], MILK_CATEGORY_SIGNALS)) {
