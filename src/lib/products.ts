@@ -6,6 +6,24 @@ const NEW_ARRIVALS_CATEGORY_ID = "new-arrivals";
 
 const CATEGORY_DEFINITIONS = [
   {
+    id: NEW_ARRIVALS_CATEGORY_ID,
+    label: "جديدنا",
+    icon: "✨",
+    badgeClass: "bg-indigo-100 text-indigo-700",
+    cardPlaceholderGradient: "from-indigo-50 to-blue-100",
+    detailPlaceholderGradient: "from-indigo-100 to-blue-200",
+    homeGradient: "from-indigo-600 to-sky-500",
+  },
+  {
+    id: "offers-discounts-up-to-50",
+    label: "عروض وخصومات تصل إلى 50%",
+    icon: "🏷️",
+    badgeClass: "bg-red-100 text-red-700",
+    cardPlaceholderGradient: "from-red-50 to-orange-100",
+    detailPlaceholderGradient: "from-red-100 to-orange-200",
+    homeGradient: "from-red-600 to-orange-500",
+  },
+  {
     id: "antibiotics",
     label: "مضادات حيوية",
     icon: "💊",
@@ -31,24 +49,6 @@ const CATEGORY_DEFINITIONS = [
     cardPlaceholderGradient: "from-purple-50 to-fuchsia-100",
     detailPlaceholderGradient: "from-purple-100 to-fuchsia-200",
     homeGradient: "from-purple-600 to-fuchsia-500",
-  },
-  {
-    id: "offers-discounts-up-to-50",
-    label: "عروض وخصومات تصل إلى 50%",
-    icon: "🏷️",
-    badgeClass: "bg-red-100 text-red-700",
-    cardPlaceholderGradient: "from-red-50 to-orange-100",
-    detailPlaceholderGradient: "from-red-100 to-orange-200",
-    homeGradient: "from-red-600 to-orange-500",
-  },
-  {
-    id: NEW_ARRIVALS_CATEGORY_ID,
-    label: "جديدنا",
-    icon: "✨",
-    badgeClass: "bg-indigo-100 text-indigo-700",
-    cardPlaceholderGradient: "from-indigo-50 to-blue-100",
-    detailPlaceholderGradient: "from-indigo-100 to-blue-200",
-    homeGradient: "from-indigo-600 to-sky-500",
   },
   {
     id: "dewormers-mange-parasites",
